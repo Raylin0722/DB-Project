@@ -33,7 +33,6 @@ app.token_serializer = s
 # 註冊 blueprint
 app.register_blueprint(auth_bp)
 
-# 靜態首頁
 @app.route('/')
 def index():
     return render_template('index.html')

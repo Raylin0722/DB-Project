@@ -25,7 +25,7 @@ def register():
         if cursor.fetchone():
             return jsonify({"status": "error", "message": "⚠ 此信箱已送出驗證信，請先前往信箱完成驗證"}), 400
 
-        # 儲存進 TempUsers（雜湊密碼）
+        # 儲存進 TempUsers
         hashed_pw = generate_password_hash(data['password'])
         cursor.execute("""
             INSERT INTO TempUsers (username, school_email, password_hash, department, phone)
@@ -64,7 +64,7 @@ def confirm_email():
         conn = connection_pool.get_connection()
         cursor = conn.cursor()
 
-        # 先檢查正式帳號是否已存在
+        # 檢查正式帳號是否已存在
         cursor.execute("SELECT * FROM Users WHERE school_email = %s", (email,))
         if cursor.fetchone():
             return '該信箱已完成註冊', 400
@@ -158,14 +158,14 @@ def forgot_password():
         create_at=datetime.utcnow()
         expiry = datetime.utcnow() + timedelta(hours=1)
 
-        # 寫入資料表
+        # 寫入passwordresetrequests
         cursor.execute("""
             INSERT INTO passwordresetrequests (token, created_at,expiry, used, user_id)
             VALUES (%s,%s, %s, 0, %s)
         """, (token,create_at, expiry, user_id))
         conn.commit()
 
-        # 發送信件
+        # 發送密碼變更信件
         reset_link = url_for('auth.reset_password_page', token=token, _external=True)
         msg = Message('師大校園失物招領系統 密碼變更', recipients=[email])
         msg.body = f'您好:\n感謝您使用師大校園失物招領系統，請點擊以下連結完成密碼變更設定，為確保資料安全，此網址於1小時內有效\n\n{reset_link}\n\n師大校園失物招領系統敬上\n\n信件由系統自動發出，請勿回覆本信件。'
