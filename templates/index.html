@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>校園失物招領系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-light">
+<div id="app" class="container py-5">
+    <h1 class="text-center mb-5">校園失物招領與配對系統</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- 未登入時顯示登入/註冊/訪客模式 -->
+            <div v-if="!loggedIn && !guestMode" class="card shadow">
+                <div class="card-body">
+                    <div v-if="showLogin">
+                        <h3 class="card-title mb-3">登入</h3>
+                        <form @submit.prevent="handleLogin">
+                            <div class="mb-3">
+                                <label class="form-label">信箱</label>
+                                <input v-model="loginForm.school_email" type="email" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label">密碼</label>
+                              <div class="input-group">
+                                <input :type="loginPasswordVisible ? 'text' : 'password'" v-model="loginForm.password" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" @click="loginPasswordVisible = !loginPasswordVisible">
+                                  <i :class="loginPasswordVisible ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                                </button>
+                              </div>
+                            </div>
+                            <p class="mt-2 text-end">
+                            <a href="#" @click="showForgot = !showForgot">忘記密碼？</a></p>
+                            <button class="btn btn-primary w-100" type="submit">登入</button>
+                        </form>
+                        <div v-if="showForgot" class="mt-3">
+                          <input type="email" v-model="forgotEmail" class="form-control" placeholder="請輸入註冊信箱">
+                          <button @click="sendForgotEmail" class="btn btn-outline-primary mt-2">寄送重設連結</button>
+                          <div class="text-success mt-2" v-if="forgotMessage">{% raw %}{{ forgotMessage }}{% endraw %}</div>
+                          <div class="text-danger mt-2" v-if="forgotError">{% raw %}{{ forgotError }}{% endraw %}</div>
+                        </div>
+                        <div class="text-danger mt-2">{% raw %}{{ loginMessage }}{% endraw %}</div>
+                        <p class="mt-3 text-center">尚未註冊？<a href="#" @click="switchToRegister">建立帳號</a></p>
+                    </div>
+                    <div v-else>
+                        <h3 class="card-title mb-3">註冊</h3>
+                        <form @submit.prevent="handleRegister">
+                            <div class="mb-3">
+                                <label class="form-label">使用者名稱</label>
+                                <input v-model="registerForm.username" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">信箱</label>
+                                <input v-model="registerForm.school_email" type="email" class="form-control" required>
+                                <div v-if="registerForm.school_email && !emailValid" class="form-text text-danger">
+                                    請輸入有效的 Email 格式
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label">密碼(需為6 到 12個英數字組合)</label>
+                              
+                              <div class="input-group">
+                                <input :type="registerPasswordVisible ? 'text' : 'password'" v-model="registerForm.password" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" @click="registerPasswordVisible = !registerPasswordVisible">
+                                  <i :class="registerPasswordVisible ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                                </button>
+                              </div>
+                              <div class="form-text text-danger" v-if="registerForm.password && !passwordLengthValid">
+                                    密碼長度需為 6 到 12 個字元
+                                </div>
+                                <div class="form-text text-danger" v-if="registerForm.password && (!passwordHasLetter || !passwordHasNumber)">
+                                    密碼需同時包含英文字母與數字
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label">確認密碼</label>
+                              <div class="input-group">
+                                <input :type="confirmPasswordVisible ? 'text' : 'password'" v-model="confirmPassword" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" @click="confirmPasswordVisible = !confirmPasswordVisible">
+                                  <i :class="confirmPasswordVisible ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                                </button>
+                              </div>
+                              <div class="form-text text-danger" v-if="confirmPassword && !passwordsMatch">
+                                兩次輸入的密碼不一致
+                              </div>
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label">系所</label>
+                              <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" @click="showDeptDropdown = !showDeptDropdown">
+                                  {% raw %}{{ registerForm.department || '請選擇系所' }}{% endraw %}
+                                </button>
+                                <ul class="dropdown-menu show w-100" v-show="showDeptDropdown" style="max-height: 200px; overflow-y: auto;">
+                                  <li v-for="dept in departments" :key="dept">
+                                    <a class="dropdown-item" href="#" @click.prevent="selectDepartment(dept)">{% raw %}{{ dept }}{% endraw %}</a>
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">電話(選填)</label>
+                                <input v-model="registerForm.phone" type="tel" class="form-control" >
+                            </div>
+                            <button class="btn btn-success w-100" type="submit">註冊</button>
+                        </form>
+                        <div class="text-danger mt-2">{% raw %}{{ registerMessage }}{% endraw %}</div>
+                        <p class="mt-3 text-center">已有帳號？<a href="#" @click="switchToLogin">回到登入</a></p>
+                    </div>
+                
+                    <hr>
+                    <div class="text-center">
+                        <button class="btn btn-outline-secondary" @click="guestLogin">以訪客身份瀏覽</button>
+                    </div>
+                </div>
+            </div>
+                    
+            <!-- 登入後顯示使用者資訊 -->
+            <div v-if="loggedIn" class="card shadow text-center">
+                <div class="card-body">
+                    <h3 class="card-title">歡迎，{% raw %}{{ userInfo.username }}{% endraw %}！</h3>
+                    <button class="btn btn-outline-danger mt-3 me-2" @click="logout">登出</button>
+                    <button class="btn btn-outline-success mt-3" @click="goToBrowse">瀏覽失物招領</button>
+                </div>
+            </div>
+            <!-- 訪客模式畫面 -->
+            <div v-if="!loggedIn && guestMode" class="card shadow text-center">
+                <div class="card-body">
+                    <h3 class="card-title">歡迎使用訪客模式</h3>
+                    <p class="card-text">您可以瀏覽遺失物資訊，但無法張貼或留言。</p>
+                    <button class="btn btn-outline-danger mt-3 me-2" @click="guestLogout">回到登入畫面</button>
+                    <button class="btn btn-outline-success mt-3" @click="goToBrowse">瀏覽失物招領</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/index.js"></script>
+
+</body>
+</html>
