@@ -45,31 +45,36 @@ createApp({
         },
         switchToRegister() {
             this.showLogin = false;
+            this.clearForgotForm();
             this.clearLoginForm();
             this.loginMessage = '';
         },
         switchToLogin() {
             this.showLogin = true;
+            this.clearForgotForm();
             this.clearRegisterForm();
-                        this.registerMessage = '';
-                    },
-                    clearLoginForm() {
-                this.loginForm.school_email = '';
-                this.loginForm.password = '';
-                this.loginPasswordVisible = false;
-            },
-
+            this.registerMessage = '';
+        },
+        clearLoginForm() {
+            this.loginForm.school_email = '';
+            this.loginForm.password = '';
+            this.loginPasswordVisible = false;
+        },
         clearRegisterForm() {
-                this.registerForm.username = '';
-                this.registerForm.school_email = '';
-                this.registerForm.password = '';
-                this.registerForm.department = '';
-                this.registerForm.phone = '';
-                this.registerPasswordVisible = false;
-                this.confirmPassword= '';
-                this.showDeptDropdown = false;
-            },
-        
+            this.registerForm.username = '';
+            this.registerForm.school_email = '';
+            this.registerForm.password = '';
+            this.registerForm.department = '';
+            this.registerForm.phone = '';
+            this.registerPasswordVisible = false;
+            this.confirmPassword= '';
+            this.showDeptDropdown = false;
+        },
+        clearForgotForm() {
+            this.showForgot = !this.showForgot,
+            this.forgotMessage = '',
+            this.forgotError = ''
+        },
         handleLogin() {
             fetch('/login', {
                 method: 'POST',
@@ -141,8 +146,9 @@ createApp({
         guestLogin() {
             this.guestMode = true;
         },
-
         guestLogout() {
+            this.switchToLogin() 
+            this.showForgot = !this.showForgot
             this.guestMode = false;
         },
         sendForgotEmail() {

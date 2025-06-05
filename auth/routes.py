@@ -20,6 +20,10 @@ def register():
         if cursor.fetchone():
             return jsonify({"status": "error", "message": "此信箱已註冊，請直接登入"}), 400
         
+        cursor.execute("""
+            DELETE FROM TempUsers WHERE created_at < (UTC_TIMESTAMP() - INTERVAL 1 HOUR)
+        """)
+        
         # 檢查是否已經存在於 TempUsers 表中（尚未驗證）
         cursor.execute("SELECT * FROM TempUsers WHERE school_email = %s", (email,))
         if cursor.fetchone():
@@ -58,7 +62,7 @@ def confirm_email():
         s = current_app.token_serializer
         email = s.loads(token, salt='email-confirm', max_age=3600)
     except Exception as e:
-        return f'驗證失敗或連結已過期：{str(e)}', 400
+        return f'驗證失敗或連結已過期', 400
 
     try:
         conn = connection_pool.get_connection()
@@ -125,6 +129,7 @@ def login():
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
+        
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
@@ -140,6 +145,26 @@ def forgot_password():
         if not row:
             return jsonify({"status": "error", "message": "查無此信箱"}), 404
         user_id = row[0]
+        
+        # 刪除1小時內未更改密碼，上次變更為3天前
+        cursor.execute("""
+            DELETE FROM PasswordResetRequests
+            WHERE
+                (used = 0 AND expiry < UTC_TIMESTAMP())
+                OR
+                (used = 1 AND created_at < (UTC_TIMESTAMP() - INTERVAL 3 DAY))
+        """)
+        
+        # 三天內變更過密碼
+        cursor.execute("""
+            SELECT 1 FROM PasswordResetRequests
+            WHERE user_id = %s AND used = 1 AND created_at > UTC_TIMESTAMP() - INTERVAL 3 DAY
+        """, (user_id,))
+        if cursor.fetchone():
+            return jsonify({
+                "status": "error",
+                "message": "⚠ 您已於三日內變更過密碼"
+            }), 429
 
         # 檢查是否已有未使用、未過期的 token
         cursor.execute("""
