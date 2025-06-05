@@ -16,19 +16,19 @@ def register():
         conn = connection_pool.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM users WHERE school_email = %s", (email,))
+        cursor.execute("SELECT * FROM Users WHERE school_email = %s", (email,))
         if cursor.fetchone():
             return jsonify({"status": "error", "message": "此信箱已註冊，請直接登入"}), 400
-
-        # 檢查是否已經存在於 tempusers 表中（尚未驗證）
-        cursor.execute("SELECT * FROM tempusers WHERE school_email = %s", (email,))
+        
+        # 檢查是否已經存在於 TempUsers 表中（尚未驗證）
+        cursor.execute("SELECT * FROM TempUsers WHERE school_email = %s", (email,))
         if cursor.fetchone():
             return jsonify({"status": "error", "message": "⚠ 此信箱已送出驗證信，請先前往信箱完成驗證"}), 400
 
-        # 儲存進 tempusers
+        # 儲存進 TempUsers
         hashed_pw = generate_password_hash(data['password'])
         cursor.execute("""
-            INSERT INTO tempusers (username, school_email, password_hash, department, phone)
+            INSERT INTO TempUsers (username, school_email, password_hash, department, phone)
             VALUES (%s, %s, %s, %s, %s)
         """, (data['username'], email, hashed_pw, data['department'], data['phone']))
         conn.commit()
@@ -65,24 +65,24 @@ def confirm_email():
         cursor = conn.cursor()
 
         # 檢查正式帳號是否已存在
-        cursor.execute("SELECT * FROM users WHERE school_email = %s", (email,))
+        cursor.execute("SELECT * FROM Users WHERE school_email = %s", (email,))
         if cursor.fetchone():
             return '該信箱已完成註冊', 400
 
-        # 從 Tempusers 取出資料
-        cursor.execute("SELECT * FROM tempusers WHERE school_email = %s", (email,))
+        # 從 TempUsers 取出資料
+        cursor.execute("SELECT * FROM TempUsers WHERE school_email = %s", (email,))
         temp_user = cursor.fetchone()
         if not temp_user:
             return '找不到驗證中的帳號', 400
 
-        # 寫入正式 users
+        # 寫入正式 Users
         cursor.execute("""
-            INSERT INTO users (username, school_email, password_hash, department, phone, role)
+            INSERT INTO Users (username, school_email, password_hash, department, phone, role)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (temp_user[1], temp_user[2], temp_user[3], temp_user[4], temp_user[5], 'member'))
 
         # 刪除暫存
-        cursor.execute("DELETE FROM tempusers WHERE school_email = %s", (email,))
+        cursor.execute("DELETE FROM TempUsers WHERE school_email = %s", (email,))
         conn.commit()
 
         return '✅ 註冊成功！您現在可以登入'
@@ -103,7 +103,7 @@ def login():
 
         conn = connection_pool.get_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE school_email = %s", (email,))
+        cursor.execute("SELECT * FROM Users WHERE school_email = %s", (email,))
         user = cursor.fetchone()
 
         if not user or not check_password_hash(user['password_hash'], password):
@@ -125,7 +125,6 @@ def login():
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
-
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
@@ -136,7 +135,7 @@ def forgot_password():
         cursor = conn.cursor()
 
         # 取得 user_id
-        cursor.execute("SELECT user_id FROM users WHERE school_email = %s", (email,))
+        cursor.execute("SELECT user_id FROM Users WHERE school_email = %s", (email,))
         row = cursor.fetchone()
         if not row:
             return jsonify({"status": "error", "message": "查無此信箱"}), 404
@@ -144,7 +143,7 @@ def forgot_password():
 
         # 檢查是否已有未使用、未過期的 token
         cursor.execute("""
-            SELECT * FROM passwordresetrequests
+            SELECT * FROM PasswordResetRequests
             WHERE user_id = %s AND used = 0 AND expiry > UTC_TIMESTAMP()
         """, (user_id,))
         if cursor.fetchone():
@@ -159,9 +158,9 @@ def forgot_password():
         create_at=datetime.utcnow()
         expiry = datetime.utcnow() + timedelta(hours=1)
 
-        # 寫入passwordresetrequests
+        # 寫入PasswordResetRequests
         cursor.execute("""
-            INSERT INTO passwordresetrequests (token, created_at,expiry, used, user_id)
+            INSERT INTO PasswordResetRequests (token, created_at,expiry, used, user_id)
             VALUES (%s,%s, %s, 0, %s)
         """, (token,create_at, expiry, user_id))
         conn.commit()
@@ -202,7 +201,7 @@ def reset_password():
         cursor = conn.cursor()
 
         # 取得 user_id
-        cursor.execute("SELECT user_id FROM users WHERE school_email = %s", (email,))
+        cursor.execute("SELECT user_id FROM Users WHERE school_email = %s", (email,))
         row = cursor.fetchone()
         if not row:
             return jsonify({"status": "error", "message": "使用者不存在"}), 404
@@ -210,7 +209,7 @@ def reset_password():
 
         # 確認 token 是否存在且未過期且未使用
         cursor.execute("""
-            SELECT request_id FROM passwordresetrequests
+            SELECT request_id FROM PasswordResetRequests
             WHERE token = %s AND user_id = %s AND used = 0 AND expiry > UTC_TIMESTAMP()
         """, (token, user_id))
         record = cursor.fetchone()
@@ -222,12 +221,12 @@ def reset_password():
         # 更新密碼
         hashed_pw = generate_password_hash(new_password)
         cursor.execute("""
-            UPDATE users SET password_hash = %s WHERE user_id = %s
+            UPDATE Users SET password_hash = %s WHERE user_id = %s
         """, (hashed_pw, user_id))
 
         # 標記 token 已使用
         cursor.execute("""
-            UPDATE passwordresetrequests SET used = 1 WHERE request_id = %s
+            UPDATE PasswordResetRequests SET used = 1 WHERE request_id = %s
         """, (request_id,))
         conn.commit()
 
