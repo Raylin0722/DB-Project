@@ -53,7 +53,14 @@
 					<p class="mb-1 small text-muted">{% raw %}{{ item.location }}{% endraw %} ‧ {% raw %}{{ item.date }}{% endraw %}</p>
 					<p class="mb-0">{% raw %}{{ item.description }}{% endraw %}</p>
 					</div>
-					<a :href="'/items/' + item.id + '?from_page=adminManage'" class="btn btn-sm btn-outline-primary ms-auto">詳情</a>
+					<a
+                        :href="type === 'found'
+                            ? '/items/' + item.id + '?from_page=adminManage'
+                            : '/lostitems/' + item.id + '?from_page=adminManage'"
+                        class="btn btn-sm btn-outline-primary ms-auto"
+                        >
+                        詳情
+                    </a>
                     <a :href="'/items/' + item.id + '?from_page=adminManage'" class="btn btn-sm btn-outline-danger ms-2">刪除</a>
                 </li>
 			</ul>

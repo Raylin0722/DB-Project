@@ -5,6 +5,7 @@ from auth.routes import auth_bp
 from auth.post import post_bp
 from auth.lostfound_routes import lostfound_bp
 from auth.item_detail import detail_bp
+from auth.lost_detail import lost_detail_bp
 from auth.admin import admin_bp
 from flask_mail import Mail
 from flask_mail import Message
@@ -47,6 +48,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(lostfound_bp)
 app.register_blueprint(post_bp)
 app.register_blueprint(detail_bp)
+app.register_blueprint(lost_detail_bp)
 app.register_blueprint(admin_bp)
 
 @app.route('/')
