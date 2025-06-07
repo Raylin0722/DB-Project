@@ -7,6 +7,9 @@ from flask_mail import Mail
 from flask_mail import Message
 from flask import render_template
 from itsdangerous import URLSafeTimedSerializer
+from datetime import timedelta  
+
+
 
 # 初始化
 mail = Mail()
@@ -30,6 +33,9 @@ mail.init_app(app)
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 app.mail = mail
 app.token_serializer = s
+
+# 設定 Session 有效時間
+app.permanent_session_lifetime = timedelta(minutes=30)
 
 # 註冊 blueprint
 app.register_blueprint(auth_bp)

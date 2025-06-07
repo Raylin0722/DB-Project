@@ -138,10 +138,13 @@ createApp({
         },
 
         logout() {
-            this.loggedIn = false;
-            this.clearLoginForm();
-            this.loginMessage = '';
-            this.guestMode = false;
+            fetch('/logout', { method: 'POST' })
+            .then(() => {
+              this.loggedIn = false;
+              this.clearLoginForm();
+              this.loginMessage = '';
+              this.guestMode = false;
+            });
         },
         guestLogin() {
             this.guestMode = true;

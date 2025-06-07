@@ -109,9 +109,12 @@ def login():
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM Users WHERE school_email = %s", (email,))
         user = cursor.fetchone()
-
+        
         if not user or not check_password_hash(user['password_hash'], password):
             return jsonify({"status": "error", "message": "信箱或密碼錯誤"}), 401
+        
+        session.permanent = True
+        session['user_id'] = user['user_id']
 
         print(f"收到登入請求：{{使用者: {email}}}")
         return jsonify({
@@ -262,6 +265,11 @@ def reset_password():
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    session.clear() 
+    return jsonify({"status": "success", "message": "已成功登出"})
 
 # @auth_bp.route('/browse')
 # def browse_page():
