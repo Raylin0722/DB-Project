@@ -83,6 +83,7 @@ createApp({
       this.form = {
         item_name: '',
         category: '',
+        lost_campus:'',
         lost_location: '',
         lost_time: '',
         contact_phone: '',
