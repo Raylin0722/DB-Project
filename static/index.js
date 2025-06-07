@@ -1,6 +1,19 @@
 const { createApp } = Vue;
 createApp({
     mounted() {
+        fetch('/me')
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            this.loggedIn = true;
+            this.userInfo = data.user;
+          } else {
+            this.loggedIn = false;
+          }
+        })
+        .finally(() => {
+      this.checkingLogin = false;
+    });
       fetch('/static/departments.json')
         .then(res => res.json())
         .then(data => {
@@ -9,6 +22,7 @@ createApp({
     },
     data() {
         return {
+            checkingLogin: true,
             loginPasswordVisible: false,
             registerPasswordVisible: false,
             guestMode: false,

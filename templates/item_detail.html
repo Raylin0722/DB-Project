@@ -63,9 +63,8 @@
     <div class="row g-4 align-items-center">
       <!-- 圖片區 -->
       <div class="col-md-5 text-center">
-        {% if item.image %}
-          <img src="data:image/jpeg;base64,{{ item.image | b64encode | decode('utf-8') }}"
-               alt="失物圖片" class="img-fluid item-image">
+        {% if item.image_url %}
+          <img src="{{ item.image_url }}" alt="失物圖片" class="img-fluid item-image">
         {% else %}
           <img src="{{ url_for('static', filename='default.jpg') }}"
                alt="預設圖片" class="img-fluid item-image">
@@ -81,19 +80,24 @@
           <div class="info-label">分類：</div>
           <div class="info-value">{{ item.category }}</div>
         </div>
+        
+        <div class="info-item">
+          <div class="info-label">拾獲校區：</div>
+          <div class="info-value">{{ item.found_campus }}</div>
+        </div>
 
         <div class="info-item">
-          <div class="info-label">撿到地點：</div>
+          <div class="info-label">拾獲地點：</div>
           <div class="info-value">{{ item.found_location }}</div>
         </div>
 
         <div class="info-item">
-          <div class="info-label">撿到時間：</div>
+          <div class="info-label">拾獲時間：</div>
           <div class="info-value">{{ item.found_time }}</div>
         </div>
 
         <div class="info-item">
-          <div class="info-label">暫放位置：</div>
+          <div class="info-label">存放地點：</div>
           <div class="info-value">{{ item.storage_location }}</div>
         </div>
 
@@ -109,7 +113,14 @@
 
         <div class="info-item">
           <div class="info-label">狀態：</div>
-          <div class="info-value">{{ item.status }}</div>
+          <div class="info-value">
+            {% if item.status == 'open' %}
+              尚未領取
+            {% elif item.status == 'claimed' %}
+              已領取
+            {% else %}
+              {{ item.status }}
+            {% endif %}</div>
         </div>
 
         <div class="info-item">

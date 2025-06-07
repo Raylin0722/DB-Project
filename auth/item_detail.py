@@ -17,9 +17,9 @@ def item_detail(item_id):
 
         cursor.execute("""
             SELECT 
-                found_id, item_name, category, found_location, found_time,
-                storage_location, contact_phone, contact_email, remark, status
-                
+                found_id, item_name, category, image_url, found_campus,
+                found_location, found_time, storage_location,
+                contact_phone, contact_email, remark, status
             FROM FoundItems
             WHERE found_id = %s
         """, (item_id,))

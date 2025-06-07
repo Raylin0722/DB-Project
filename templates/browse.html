@@ -25,9 +25,15 @@
 <div class="container my-5">
 	<div class="card shadow">
 		<div class="card-body">
-		<div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-			<h2 class="card-title mb-0">失物招領</h2>
-			<small class="text-muted">您是以 <strong>{{ mode }}</strong> 身份瀏覽此頁面。</small>
+		<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+		  <div>
+		    <h2 class="card-title mb-0">失物招領</h2>
+		    <small class="text-muted">您是以 <strong>{{ mode }}</strong> 身份瀏覽此頁面。</small>
+		  </div>
+		  <div class="d-flex gap-2">
+		    <a href="{{ url_for('lostfound.create_lost_page') }}" class="btn btn-outline-danger">登記遺失物</a>
+		    <a href="{{ url_for('lostfound.create_found_page') }}" class="btn btn-outline-success">刊登拾獲物</a>
+		  </div>
 		</div>
 
 		<!-- 搜尋欄，可保留或移除 -->
@@ -39,7 +45,7 @@
 
 		<!-- 遺失物清單：加入 scroll-container 以可滾動顯示 -->
 		<div class="scroll-container" id="post-app" v-cloak>
-			<div v-if="items.length === 0" class="text-center py-5 text-muted">暫無遺失物資訊</div>
+			<div v-if="items.length === 0" class="text-center py-5 text-muted">暫無拾獲物資訊</div>
 			<ul class="list-group list-group-flush" v-else>
 				<li class="list-group-item d-flex align-items-start" v-for="item in items" :key="item.id">
 					<div class="me-3">

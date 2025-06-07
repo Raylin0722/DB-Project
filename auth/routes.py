@@ -274,7 +274,7 @@ def logout():
 # @auth_bp.route('/browse')
 # def browse_page():
 #     mode = request.args.get('mode', 'unknown')
-#     return render_template('create_lost.html', mode=mode)
+#     return render_template('create_found.html', mode=mode)
 
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():

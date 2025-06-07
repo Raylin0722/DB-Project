@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>遺失物登記資訊</title>
+  <title>刊登拾獲物</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <style>
@@ -16,11 +16,11 @@
   <div id="app" class="container py-5">
     <div class="card shadow form-card">
       <div class="card-body p-4">
-        <h2 class="card-title mb-4 text-center">登記遺失物</h2>
+        <h2 class="card-title mb-4 text-center">刊登拾獲物</h2>
         <div v-if="statusMessage" :class="['alert', statusClass]" role="alert">
           {% raw %}{{ statusMessage }}{% endraw %}
         </div>
-        <form @submit.prevent="submitForm" novalidate>
+        <form @submit.prevent="submitForm" novalidate enctype="multipart/form-data">
           <div class="mb-3">
             <label class="form-label">物品名稱 <span class="text-danger">*</span></label>
             <input type="text" class="form-control" v-model="form.item_name" required placeholder="例如：黑色皮夾"/>
@@ -43,7 +43,7 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">遺失地點 <span class="text-danger">*</span></label>
+            <label class="form-label">拾獲地點 <span class="text-danger">*</span></label>
             <div class="row g-2">
               <div class="col-md-6">
                 <select class="form-select" v-model="selectedCampus">
@@ -52,7 +52,7 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <select class="form-select" v-model="form.lost_location" :disabled="!selectedCampus">
+                <select class="form-select" v-model="form.found_location" :disabled="!selectedCampus">
                   <option disabled value="">請選擇地點</option>
                   <option v-for="loc in locationOptions" :key="loc">{% raw %}{{ loc }}{% endraw %}</option>
                 </select>
@@ -61,36 +61,39 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">遺失時間 <span class="text-danger">*</span></label>
-            <input type="datetime-local" class="form-control" v-model="form.lost_time" required />
+            <label class="form-label">拾獲時間 <span class="text-danger">*</span></label>
+            <input type="datetime-local" class="form-control" v-model="form.found_time" required />
+            <div class="text-danger mt-1" v-if="form.found_time && !isFoundTimeValid">
+              ⚠ 請正確填寫拾獲時間
+            </div>
           </div>
 
-          <div class="text-danger mt-1" v-if="form.lost_time && !isLostTimeValid">
-            ⚠ 請正確填寫遺失時間
+          <div class="mb-3">
+            <label class="form-label">存放地點 <span class="text-danger">*</span></label>
+            <select class="form-select" v-model="form.storage_location" required>
+              <option disabled value="">請選擇存放地點</option>
+              <option value="總務處">總務處</option>
+              <option value="警衛室">警衛室</option>
+            </select>
           </div>
 
           
-          <div class="mb-3">
-            <label class="form-label">聯絡信箱 <span class="text-danger">*</span></label>
-            <input type="email" class="form-control" v-model="form.contact_email" required />
-            <div class="form-text">預設為登入信箱，若希望以不同信箱收件，請更改</div>
-          </div>
 
           <div class="mb-3">
-            <label class="form-label">聯絡電話 </label>
+            <label class="form-label">聯絡電話</label>
             <input type="tel" class="form-control" v-model="form.contact_phone" />
-            <div class="form-text">僅限管理員聯絡使用，非必填</div>
+            <div class="form-text">僅供遺失物主人聯絡拾獲者使用，非必填</div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label">通知期限 (天)</label>
-            <input type="number" class="form-control" v-model="form.notification_period" min="1" max="14" placeholder="預設最多為14天"/>
-            <div class="form-text">系統會在期限結束前自動提醒您更新狀態，非必填</div>
+            <label class="form-label">聯絡信箱</label>
+            <input type="email" class="form-control" v-model="form.contact_email" />
+            <div class="form-text">僅供遺失物主人聯絡拾獲者使用，非必填</div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label">備註 / 特徵描述</label>
-            <textarea class="form-control" v-model="form.remark" rows="4"></textarea>
+            <label class="form-label">圖片上傳</label>
+            <input class="form-control" type="file" @change="handleImageChange" accept="image/*" />
           </div>
 
           <div class="d-grid gap-2">
@@ -102,7 +105,6 @@
     </div>
   </div>
 
-  <script src="/static/create_lost.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/create_found.js"></script>
 </body>
 </html>
