@@ -9,6 +9,7 @@ from db import connection_pool
 from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
+
 @auth_bp.route('/items/<int:item_id>')
 def item_detail(item_id):
     try:

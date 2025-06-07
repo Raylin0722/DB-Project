@@ -12,6 +12,12 @@
 		-webkit-overflow-scrolling: touch; /* 行動裝置更順暢 */
 		}
 		[v-cloak] { display: none; }
+    .category-badge {
+    display: inline-block;
+    width: 5em;               /* 依照最多四字調整寬度 */
+    text-align: center;
+    white-space: nowrap;
+  }
 	</style>
 </head>
 <body class="bg-light">
@@ -36,12 +42,12 @@
 			<ul class="list-group list-group-flush" v-else>
 				<li class="list-group-item d-flex align-items-start" v-for="item in items" :key="item.id">
 					<div class="me-3">
-					<span class="badge bg-secondary">[[ item.category ]]</span>
+          <span class="badge bg-secondary category-badge">{% raw %}{{ item.category }}{% endraw %}</span>
 					</div>
 					<div class="flex-grow-1">
-					<h5 class="mb-1">[[ item.title ]]</h5>
-					<p class="mb-1 small text-muted">[[ item.location ]] ‧ [[ formatDate(item.date) ]]</p>
-					<p class="mb-0">[[ item.description ]]</p>
+					<h5 class="mb-1">{% raw %}{{ item.title }}{% endraw %}</h5>
+					<p class="mb-1 small text-muted">{% raw %}{{ item.location }}{% endraw %} ‧ {% raw %}{{ item.date }}{% endraw %}</p>
+					<p class="mb-0">{% raw %}{{ item.description }}{% endraw %}</p>
 					</div>
 					<a :href="'/items/' + item.id" class="btn btn-sm btn-outline-primary ms-auto">詳情</a>
 				</li>

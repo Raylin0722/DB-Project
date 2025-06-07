@@ -1,7 +1,6 @@
 const { createApp } = Vue;
 
 createApp({
-    delimiters: ['[[', ']]'],
     data() {
         return {
         items: window.pageData.items || [],
