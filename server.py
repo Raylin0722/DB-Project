@@ -2,8 +2,9 @@ import flask
 import os
 from dotenv import load_dotenv
 from auth.routes import auth_bp
-from post.post import post_bp
+from auth.post import post_bp
 from auth.lost_routes import lost_bp
+from auth.item_detail import detail_bp
 from flask_mail import Mail
 from flask_mail import Message
 from flask import render_template
@@ -42,6 +43,7 @@ app.permanent_session_lifetime = timedelta(minutes=30)
 app.register_blueprint(auth_bp)
 app.register_blueprint(lost_bp)
 app.register_blueprint(post_bp)
+app.register_blueprint(detail_bp)
 
 @app.route('/')
 def index():

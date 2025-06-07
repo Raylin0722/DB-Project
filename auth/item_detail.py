@@ -8,9 +8,8 @@ from flask_mail import Message
 from db import connection_pool
 from datetime import datetime, timedelta
 
-auth_bp = Blueprint('auth', __name__)
-
-@auth_bp.route('/items/<int:item_id>')
+detail_bp = Blueprint('detail', __name__)
+@detail_bp.route('/items/<int:item_id>')
 def item_detail(item_id):
     try:
         conn = connection_pool.get_connection()
@@ -19,8 +18,8 @@ def item_detail(item_id):
         cursor.execute("""
             SELECT 
                 found_id, item_name, category, found_location, found_time,
-                storage_location, contact_phone, contact_email, remark, status,
-                image
+                storage_location, contact_phone, contact_email, remark, status
+                
             FROM FoundItems
             WHERE found_id = %s
         """, (item_id,))

@@ -8,13 +8,14 @@ post_bp = Blueprint('post', __name__)
 
 @post_bp.route('/browse')
 def browse_page():
-    mode = request.args.get('mode', 'unknown')
+    mode = request.args.get('mode', 'guest')
     keyword = request.args.get('q', '').strip()
-
     try:
         conn = connection_pool.get_connection()
         cursor = conn.cursor(dictionary=True)
 
+
+        print(keyword)
         if keyword:
             query = """
                 SELECT 
@@ -22,13 +23,14 @@ def browse_page():
                     item_name AS title,
                     category,
                     found_location AS location,
-                    DATE_FORMAT(found_time, '%Y-%m-%d %H:%i:%s') AS date,
+                    DATE_FORMAT(found_time, '%%Y-%%m-%%d %%H:%%i:%%s') AS date,
                     remark AS description
                 FROM FoundItems
                 WHERE item_name LIKE %s OR remark LIKE %s OR found_location LIKE %s
                 ORDER BY found_time DESC
             """
             params = (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%')
+            print(params)
         else:
             query = """
                 SELECT 
