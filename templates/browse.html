@@ -11,6 +11,7 @@
 		overflow-y: auto;     /* 啟用垂直卷軸 */
 		-webkit-overflow-scrolling: touch; /* 行動裝置更順暢 */
 		}
+		[v-cloak] { display: none; }
 	</style>
 </head>
 <body class="bg-light">
@@ -30,7 +31,7 @@
 		</form>
 
 		<!-- 遺失物清單：加入 scroll-container 以可滾動顯示 -->
-		<div class="scroll-container" id="post-app">
+		<div class="scroll-container" id="post-app" v-cloak>
 			<div v-if="items.length === 0" class="text-center py-5 text-muted">暫無遺失物資訊</div>
 			<ul class="list-group list-group-flush" v-else>
 				<li class="list-group-item d-flex align-items-start" v-for="item in items" :key="item.id">
