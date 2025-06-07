@@ -31,20 +31,20 @@
 
 		<!-- 遺失物清單：加入 scroll-container 以可滾動顯示 -->
 		<div class="scroll-container" id="post-app">
-			<ul class="list-group list-group-flush" v-if="items.length > 0">
-			<li class="list-group-item d-flex align-items-start" v-for="item in items" :key="item.id">
-				<div class="me-3">
-				<span class="badge bg-secondary">[[ item.category ]]</span>
-				</div>
-				<div class="flex-grow-1">
-				<h5 class="mb-1">[[ item.title ]]</h5>
-				<p class="mb-1 small text-muted">[[ item.location ]] ‧ [[ formatDate(item.date) ]]</p>
-				<p class="mb-0">[[ item.description ]]</p>
-				</div>
-				<a :href="'/items/' + item.id" class="btn btn-sm btn-outline-primary ms-auto">詳情</a>
-			</li>
+			<div v-if="items.length === 0" class="text-center py-5 text-muted">暫無遺失物資訊</div>
+			<ul class="list-group list-group-flush" v-else>
+				<li class="list-group-item d-flex align-items-start" v-for="item in items" :key="item.id">
+					<div class="me-3">
+					<span class="badge bg-secondary">[[ item.category ]]</span>
+					</div>
+					<div class="flex-grow-1">
+					<h5 class="mb-1">[[ item.title ]]</h5>
+					<p class="mb-1 small text-muted">[[ item.location ]] ‧ [[ formatDate(item.date) ]]</p>
+					<p class="mb-0">[[ item.description ]]</p>
+					</div>
+					<a :href="'/items/' + item.id" class="btn btn-sm btn-outline-primary ms-auto">詳情</a>
+				</li>
 			</ul>
-			<div v-else class="text-center py-5 text-muted">暫無遺失物資訊</div>
 		</div>
 
 		<div class="text-center mt-4">
