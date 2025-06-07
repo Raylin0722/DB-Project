@@ -293,7 +293,7 @@ def browse_page():
                     item_name AS title,
                     category,
                     found_location AS location,
-                    DATE_FORMAT(found_time, '%%Y-%%m-%%d') AS date,
+                    DATE_FORMAT(found_time, '%Y-%m-%d %H:%i:%s') AS date,
                     remark AS description
                 FROM FoundItems
                 ORDER BY found_time DESC
