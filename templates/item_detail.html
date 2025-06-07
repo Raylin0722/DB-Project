@@ -128,7 +128,9 @@
           <div class="info-value">{{ item.remark }}</div>
         </div>
 
-        <a href="/browse" class="btn btn-outline-primary back-button">返回瀏覽</a>
+        <a href="{% if from_page == 'adminManage' %}/adminManage{% elif from_page == 'browse' %}/blindPage{% else %}/browse{% endif %}" class="btn btn-outline-primary back-button">
+          返回
+        </a>
         <hr>
       </div>
     </div>

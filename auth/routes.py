@@ -115,6 +115,7 @@ def login():
         
         session.permanent = True
         session['user_id'] = user['user_id']
+        session['role'] = user['role']
 
         print(f"收到登入請求：{{使用者: {email}}}")
         return jsonify({

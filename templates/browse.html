@@ -56,7 +56,7 @@
 					<p class="mb-1 small text-muted">{% raw %}{{ item.location }}{% endraw %} ‧ {% raw %}{{ item.date }}{% endraw %}</p>
 					<p class="mb-0">{% raw %}{{ item.description }}{% endraw %}</p>
 					</div>
-					<a :href="'/items/' + item.id" class="btn btn-sm btn-outline-primary ms-auto">詳情</a>
+					<a :href="'/items/' + item.id + '?from_page=browse'" class="btn btn-sm btn-outline-primary ms-auto">詳情</a>
 				</li>
 			</ul>
 		</div>

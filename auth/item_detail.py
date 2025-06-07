@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 detail_bp = Blueprint('detail', __name__)
 @detail_bp.route('/items/<int:item_id>')
 def item_detail(item_id):
+    from_page = request.args.get('from_page', 'browse')
     try:
         conn = connection_pool.get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -35,4 +36,4 @@ def item_detail(item_id):
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
 
-    return render_template('item_detail.html', item=item)
+    return render_template('item_detail.html', item=item, from_page=from_page)

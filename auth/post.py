@@ -10,6 +10,7 @@ post_bp = Blueprint('post', __name__)
 def browse_page():
     mode = request.args.get('mode', 'guest')
     keyword = request.args.get('q', '').strip()
+    
     try:
         conn = connection_pool.get_connection()
         cursor = conn.cursor(dictionary=True)
@@ -54,5 +55,5 @@ def browse_page():
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
-    print(items)
+   
     return render_template('browse.html', mode=mode, items=items)

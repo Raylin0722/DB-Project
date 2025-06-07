@@ -94,3 +94,5 @@ CREATE TABLE Flags (
     FOREIGN KEY (report_id) REFERENCES Reports(report_id) ON DELETE CASCADE,
     FOREIGN KEY (found_id) REFERENCES FoundItems(found_id) ON DELETE CASCADE
 );
+
+
