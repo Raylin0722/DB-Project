@@ -36,7 +36,29 @@ const adminApp = createApp({
             } catch (e) {
                 return dateStr;
             }
+        },
+        
+        async deleteItem(id, type) {
+            console.log(id, type);
+            if (!confirm('確定要刪除這筆資料嗎？')) return;
+            let url = type === 'found'
+                ? `/adminDelete?target=found&item_id=${id}`
+                : `/adminDelete?target=lost&item_id=${id}`;
+            try {
+                const res = await fetch(url, { method: 'GET' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('刪除成功！');
+                    location.reload();
+                } else {
+                    alert('刪除失敗：' + (data.error || '未知錯誤'));
+                }
+            } catch (e) {
+                alert('刪除失敗：' + e);
+            }
         }
+        
+
     },
     computed: {
         emptyText() {

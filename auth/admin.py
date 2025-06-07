@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, session
+from flask import Blueprint, request, render_template, session, jsonify
 from db import connection_pool
 from functools import wraps
 
@@ -79,6 +79,26 @@ def adminManage():
 
     return render_template('manager.html', mode='admin', found=found, lost=lost)
 
-
+@admin_bp.route('/adminDelete', methods=['GET', 'POST'])
+@admin_required
+def delete_item():
+    target = request.args.get('target')
+    item_id = request.args.get('item_id')
+    try:
+        conn = connection_pool.get_connection()
+        cursor = conn.cursor()
+        if target == 'found':
+            cursor.execute("DELETE FROM FoundItems WHERE found_id = %s", (item_id,))
+        elif target == 'lost':
+            cursor.execute("DELETE FROM LostItems WHERE lost_id = %s", (item_id,))
+        else:
+            return jsonify(success=False, error="未知 target")
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
 
 
