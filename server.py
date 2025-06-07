@@ -2,6 +2,7 @@ import flask
 import os
 from dotenv import load_dotenv
 from auth.routes import auth_bp
+from auth.lost_routes import lost_bp
 from flask_mail import Mail
 from flask_mail import Message
 from flask import render_template
@@ -32,6 +33,7 @@ app.token_serializer = s
 
 # 註冊 blueprint
 app.register_blueprint(auth_bp)
+app.register_blueprint(lost_bp)
 
 @app.route('/')
 def index():

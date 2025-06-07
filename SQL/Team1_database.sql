@@ -17,9 +17,10 @@ CREATE TABLE TempUsers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE LostItems (
-    lost_id INT PRIMARY KEY,
+    lost_id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(100),
     category VARCHAR(50),
+    lost_campus VARCHAR(100),
     lost_location VARCHAR(100),
     lost_time DATETIME,
     contact_phone VARCHAR(20),
@@ -32,7 +33,7 @@ CREATE TABLE LostItems (
 );
 
 CREATE TABLE FoundItems (
-    found_id INT PRIMARY KEY,
+    found_id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(100),
     category VARCHAR(50),
     found_location VARCHAR(100),

@@ -1,11 +1,11 @@
-from flask import Blueprint, request, jsonify, current_app, url_for, render_template
+from flask import Blueprint, request, jsonify, current_app, url_for, render_template, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message
 from db import connection_pool
 from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
-temp_users = {} 
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -263,51 +263,30 @@ def reset_password():
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
 
-@auth_bp.route('/browse')
-def browse_page():
-    mode = request.args.get('mode', 'unknown')
-    keyword = request.args.get('q', '').strip()
+# @auth_bp.route('/browse')
+# def browse_page():
+#     mode = request.args.get('mode', 'unknown')
+#     return render_template('create_lost.html', mode=mode)
+
+@auth_bp.route('/me', methods=['GET'])
+def get_current_user():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"status": "error", "message": "尚未登入"}), 401
 
     try:
         conn = connection_pool.get_connection()
         cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM Users WHERE user_id = %s", (user_id,))
+        user = cursor.fetchone()
 
-        if keyword:
-            query = """
-                SELECT 
-                    found_id AS id,
-                    item_name AS title,
-                    category,
-                    found_location AS location,
-                    DATE_FORMAT(found_time, '%Y-%m-%d %H:%i:%s') AS date,
-                    remark AS description
-                FROM FoundItems
-                WHERE item_name LIKE %s OR remark LIKE %s OR found_location LIKE %s
-                ORDER BY found_time DESC
-            """
-            params = (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%')
-        else:
-            query = """
-                SELECT 
-                    found_id AS id,
-                    item_name AS title,
-                    category,
-                    found_location AS location,
-                    DATE_FORMAT(found_time, '%Y-%m-%d %H:%i:%s') AS date,
-                    remark AS description
-                FROM FoundItems
-                ORDER BY found_time DESC
-            """
-            params = ()
+        if not user:
+            return jsonify({"status": "error", "message": "找不到使用者"}), 404
 
-        cursor.execute(query, params)
-        items = cursor.fetchall()
-
+        return jsonify({"status": "success", "user": user})
+    
     except Exception as e:
-        print("讀取 FoundItems 錯誤：", e)
-        items = []
+        return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
-
-    return render_template('browse.html', mode=mode, items=items)
