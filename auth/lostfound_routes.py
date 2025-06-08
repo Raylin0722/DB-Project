@@ -18,12 +18,18 @@ def create_lost_item():
     try:
         conn = connection_pool.get_connection()
         cursor = conn.cursor()
+        
+        notification_period = int(data.get('notification_period') or 14)
+        notify_at= datetime.now()
+        # notify_at = datetime.now() + timedelta(days=notification_period - 1)
+        
         query = """
             INSERT INTO LostItems 
             (item_name, category,lost_campus, lost_location, lost_time, contact_phone, contact_email, 
-             notification_period, remark, status, user_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+             notification_period, remark, status, user_id,notify_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
+        
         cursor.execute(query, (
             data['item_name'],
             data['category'],
@@ -32,10 +38,11 @@ def create_lost_item():
             data['lost_time'],
             data['contact_phone'],
             data['contact_email'],
-            data.get('notification_period', None),
+            notification_period,
             data.get('remark', ''),
             'open',
-            data.get('user_id') 
+            data.get('user_id'),
+            notify_at
         ))
         conn.commit()
         newID = cursor.lastrowid
@@ -243,3 +250,89 @@ def delete_match(lost_id, found_id):
         return f"刪除錯誤：{e}", 500
     finally:
         cursor.close(); conn.close()
+        
+@lostfound_bp.route('/tasks/notify', methods=['GET'])
+def run_notify_task():
+    token = request.args.get('token')
+    if token != current_app.config['CRON_TOKEN']:
+        return jsonify({'status': 'unauthorized'}), 403
+    try:
+        notify_expiring_lost_items()
+        return jsonify({'status': 'success', 'message': '提醒信已寄出'}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@lostfound_bp.route('/tasks/cleanup', methods=['GET'])
+def run_cleanup_task():
+    token = request.args.get('token')
+    if token != current_app.config['CRON_TOKEN']:
+        return jsonify({'status': 'unauthorized'}), 403
+    try:
+        delete_expired_lost_items()
+        return jsonify({'status': 'success', 'message': '過期資料已清除'}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500   
+    
+def notify_expiring_lost_items():
+    conn = connection_pool.get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT L.*, U.school_email, U.username
+            FROM LostItems L
+            JOIN Users U ON L.user_id = U.user_id
+            WHERE L.status = 'open'
+            AND notify_at IS NOT NULL
+            AND notify_at <= NOW()
+        """)
+        expiring_items = cursor.fetchall()
+
+        for item in expiring_items:
+            msg = Message('失物登記即將到期提醒', recipients=[item['school_email']])
+            msg.body = f'''
+                您好 {item['username']}，
+
+                您在校園失物招領系統登記的物品「{item['item_name']}」即將在一天後到期。
+
+                請於 24 小時內登入系統確認是否要延長登記時間，
+                否則該筆資料將會自動從系統中刪除。
+
+                登入系統: https://your-domain.com/login
+
+                謝謝您使用本系統。
+            '''
+            current_app.mail.send(msg)
+
+            # 標記已通知
+            cursor.execute("""
+                UPDATE LostItems SET notified_at = NOW()
+                WHERE lost_id = %s
+            """, (item['lost_id'],))
+
+        conn.commit()
+
+    except Exception as e:
+        print('[通知失敗]', str(e))
+    finally:
+        cursor.close()
+        conn.close()
+        
+def delete_expired_lost_items():
+    conn = connection_pool.get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            DELETE FROM LostItems
+            WHERE notified_at IS NOT NULL
+            AND notified_at <= NOW() - INTERVAL 1 MINUTE
+            AND status = 'open'
+        """)
+        conn.commit()
+
+    except Exception as e:
+        print('[刪除失敗]', str(e))
+    finally:
+        cursor.close()
+        conn.close()

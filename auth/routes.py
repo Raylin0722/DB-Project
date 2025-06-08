@@ -40,10 +40,11 @@ def register():
         # 發送驗證信
         s = current_app.token_serializer
         token = s.dumps(email, salt='email-confirm')
+        username=data['username']
         confirm_link = url_for('auth.confirm_email', token=token, _external=True)
 
         msg = Message('師大校園失物招領系統 信箱驗證', recipients=[email])
-        msg.body = f'您好:\n感謝您註冊師大校園失物招領系統，請點擊以下連結完成帳號驗證，為確保資料安全，此網址於1小時內有效\n\n{confirm_link}\n\n師大校園失物招領系統敬上\n\n信件由系統自動發出，請勿回覆本信件。'
+        msg.body = f'您好，{username}:\n\n感謝您註冊師大校園失物招領系統，請點擊以下連結完成帳號驗證，為確保資料安全，此網址於1小時內有效\n\n{confirm_link}\n\n師大校園失物招領系統敬上\n\n信件由系統自動發出，請勿回覆本信件。'
         current_app.mail.send(msg)
 
         return jsonify({"status": "success", "message": "✅ 驗證信已寄出，請至信箱點擊連結完成註冊"})
@@ -144,11 +145,12 @@ def forgot_password():
         cursor = conn.cursor()
 
         # 取得 user_id
-        cursor.execute("SELECT user_id FROM Users WHERE school_email = %s", (email,))
+        cursor.execute("SELECT user_id, username FROM Users WHERE school_email = %s", (email,))
         row = cursor.fetchone()
         if not row:
             return jsonify({"status": "error", "message": "查無此信箱"}), 404
         user_id = row[0]
+        username = row[1]
         
         # 刪除1小時內未更改密碼，上次變更為3天前
         cursor.execute("""
@@ -197,7 +199,7 @@ def forgot_password():
         # 發送密碼變更信件
         reset_link = url_for('auth.reset_password_page', token=token, _external=True)
         msg = Message('師大校園失物招領系統 密碼變更', recipients=[email])
-        msg.body = f'您好:\n感謝您使用師大校園失物招領系統，請點擊以下連結完成密碼變更設定，為確保資料安全，此網址於1小時內有效\n\n{reset_link}\n\n師大校園失物招領系統敬上\n\n信件由系統自動發出，請勿回覆本信件。'
+        msg.body = f'您好，{username}:\n\n感謝您使用師大校園失物招領系統，請點擊以下連結完成密碼變更設定，為確保資料安全，此網址於1小時內有效\n\n{reset_link}\n\n師大校園失物招領系統敬上\n\n信件由系統自動發出，請勿回覆本信件。'
         current_app.mail.send(msg)
 
         return jsonify({"status": "success", "message": "✅ 重設密碼信已寄出，請至信箱查看"})

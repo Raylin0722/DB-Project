@@ -40,6 +40,7 @@ app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('師大校園失物招領系統',os.getenv('MAIL_DEFAULT_SENDER'))
+app.config['CRON_TOKEN'] = os.getenv('CRON_TOKEN')
 mail.init_app(app)
 
 # 建立 token serializer 並註冊給 current_app 使用

@@ -28,6 +28,8 @@ CREATE TABLE LostItems (
     notification_period INT DEFAULT 14,
     remark TEXT,
     status VARCHAR(20),
+    notify_at DATETIME,
+    notified_at DATETIME,
     user_id INT,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
