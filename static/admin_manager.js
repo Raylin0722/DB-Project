@@ -5,9 +5,11 @@ window.adminType = 'found';
 
 // admin-app：顯示清單
 const adminApp = createApp({
+    
     data() {
+        const urlType = new URLSearchParams(window.location.search).get('type');
         return {
-            type: window.adminType,
+            type: urlType || window.adminType || 'found',
             foundItems: window.pageData.found || [],
             lostItems: window.pageData.lost || [],
             items: window.pageData.found || [],
@@ -18,6 +20,9 @@ const adminApp = createApp({
             this.type = type;
             this.items = type === 'found' ? this.foundItems : this.lostItems;
             window.adminType = type;
+            const params = new URLSearchParams(window.location.search);
+    params.set('type', type);
+    window.history.replaceState({}, '', `${location.pathname}?${params}`);
             // 同步 click-app
             if (window.clickAppInstance) {
                 window.clickAppInstance.type = type;
@@ -49,7 +54,10 @@ const adminApp = createApp({
                 const data = await res.json();
                 if (data.success) {
                     alert('刪除成功！');
-                    location.reload();
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('type', this.type);
+                    window.location.search = params.toString();
+                    
                 } else {
                     alert('刪除失敗：' + (data.error || '未知錯誤'));
                 }
@@ -66,8 +74,9 @@ const adminApp = createApp({
         }
     },
     mounted() {
-        this.items = this.foundItems;
+        this.items = this.type === 'found' ? this.foundItems : this.lostItems;
         window.adminAppInstance = this;
+        console.log('刷新後當前 type:', this.type); // 新增這行
     }
 });
 adminApp.mount('#admin-app');
@@ -75,8 +84,9 @@ adminApp.mount('#admin-app');
 // click-app：只負責按鈕切換
 const clickApp = createApp({
     data() {
+        const urlType = new URLSearchParams(window.location.search).get('type');
         return {
-            type: window.adminType
+            type: urlType || window.adminType || 'found'
         };
     },
     methods: {

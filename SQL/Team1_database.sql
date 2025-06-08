@@ -25,7 +25,7 @@ CREATE TABLE LostItems (
     lost_time DATETIME,
     contact_phone VARCHAR(20),
     contact_email VARCHAR(100),
-    notification_period INT,
+    notification_period INT DEFAULT 14,
     remark TEXT,
     status VARCHAR(20),
     user_id INT,
