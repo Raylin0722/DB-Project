@@ -137,9 +137,10 @@
                     >管理貼文</button>
                     <button 
                     class="btn btn-outline-warning mt-3 ms-2"
-                    v-if="userInfo.role === 'admin' || userInfo.role === 'user'"
+                    v-if="userInfo.role === 'admin' || userInfo.role === 'member'"
                     @click="goToProfile"
                     >個人資訊</button>
+                  
                 </div>
             </div>
             <!-- 訪客模式畫面 -->
