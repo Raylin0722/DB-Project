@@ -94,7 +94,7 @@ createApp({
       this.isSubmitting = true;      // 設定為送出中
 
       try {
-        if (this.selectedImageFile) {
+        if (this.imageFile) {
           const uploadResult = await this.uploadImageToCloudinary();
           if (!uploadResult) {
             this.statusMessage = '❌ 圖片上傳失敗，請重試';
