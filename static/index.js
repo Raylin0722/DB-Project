@@ -185,11 +185,13 @@ createApp({
             .catch(err => {
               this.forgotError = err.response?.data?.message || '發生錯誤'
             })
-          },
+        },
           goToAdminManage() {
             window.location.href = '/adminManage';
+        },
+          goToProfile() {
+            window.location.href = '/profile';
         }
-      
     },
     computed: {
         passwordsMatch() {

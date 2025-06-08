@@ -7,6 +7,7 @@ from auth.lostfound_routes import lostfound_bp
 from auth.item_detail import detail_bp
 from auth.lost_detail import lost_detail_bp
 from auth.admin import admin_bp
+from auth.profile import profile_bp
 from flask_mail import Mail
 from flask_mail import Message
 from flask import render_template
@@ -56,6 +57,7 @@ app.register_blueprint(post_bp)
 app.register_blueprint(detail_bp)
 app.register_blueprint(lost_detail_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(profile_bp)
 
 @app.route('/')
 def index():
