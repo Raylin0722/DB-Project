@@ -39,6 +39,9 @@ def create_lost_item():
         return jsonify({"message": "Lost item created successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():cursor.close()
+        if 'conn' in locals():conn.close()
     
 @lostfound_bp.route('/found_items/create', methods=['POST'])
 def create_found_item():
@@ -55,14 +58,15 @@ def create_found_item():
         cursor = conn.cursor()
         query = """
             INSERT INTO FoundItems 
-            (item_name, image_url, category, found_campus, found_location, 
+            (item_name, image_url,cloudinary_id, category, found_campus, found_location, 
              found_time, storage_location, contact_phone, contact_email, 
              remark, status, user_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(query, (
             data['item_name'],
-            data.get('image_url'),  # 可為 None，若前端尚未實作圖片上傳
+            data.get('image_url'),
+            data.get('cloudinary_id'), 
             data['category'],
             data['found_campus'],
             data['found_location'],
@@ -72,15 +76,16 @@ def create_found_item():
             data['contact_email'],
             data.get('remark', ''),
             'open',
-            data.get('user_id')  # 若未登入可為 None
+            data.get('user_id')  
         ))
         conn.commit()
-        cursor.close()
-        conn.close()
         return jsonify({"message": "Found item created successfully"}), 201
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():cursor.close()
+        if 'conn' in locals():conn.close()
 
 @lostfound_bp.route('/create_lost')
 def create_lost_page():

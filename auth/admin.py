@@ -1,6 +1,8 @@
 from flask import Blueprint, request, render_template, session, jsonify
 from db import connection_pool
 from functools import wraps
+import cloudinary.uploader
+
 
 def admin_required(f):
     @wraps(f)
@@ -86,8 +88,14 @@ def delete_item():
     item_id = request.args.get('item_id')
     try:
         conn = connection_pool.get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         if target == 'found':
+            
+            cursor.execute("SELECT cloudinary_id FROM FoundItems WHERE found_id = %s", (item_id,))
+            result = cursor.fetchone()
+            if result and result['cloudinary_id']:
+                cloudinary.uploader.destroy(result['cloudinary_id'])
+                
             cursor.execute("DELETE FROM FoundItems WHERE found_id = %s", (item_id,))
         elif target == 'lost':
             cursor.execute("DELETE FROM LostItems WHERE lost_id = %s", (item_id,))

@@ -36,6 +36,7 @@ CREATE TABLE FoundItems (
     found_id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(100),
     image_url VARCHAR(500),
+    cloudinary_id VARCHAR(50),
     category VARCHAR(50),
     found_campus VARCHAR(100),
     found_location VARCHAR(100),

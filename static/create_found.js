@@ -13,6 +13,7 @@ createApp({
         contact_phone: '',
         contact_email: '',
         image_url: '',
+        cloudinary_id: '',
         remark: '',
         user_id: null
       },
@@ -67,7 +68,10 @@ createApp({
         body: formData
       });
       const result = await res.json();
-      return result.secure_url;
+      return {
+        image_url: result.secure_url,
+        cloudinary_id: result.public_id
+      };
     },
     async submitForm() {
       if (!this.isRequiredFieldsFilled) {
@@ -81,8 +85,9 @@ createApp({
         return;
       }
       try {
-        const imageUrl = await this.uploadImageToCloudinary();
-        this.form.image_url = imageUrl;
+        const uploadResult = await this.uploadImageToCloudinary();
+        this.form.image_url = uploadResult.image_url;
+        this.form.cloudinary_id = uploadResult.cloudinary_id;
 
         const response = await fetch('/found_items/create', {
           method: 'POST',
@@ -120,6 +125,7 @@ createApp({
         contact_phone: this.user?.phone || '',
         contact_email: this.user?.school_email || '',
         image_url: '',
+        cloudinary_id: '',
         remark: '',
         user_id: this.user?.user_id || null
       };
