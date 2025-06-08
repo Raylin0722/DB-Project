@@ -1,2 +1,2 @@
-# DB-Porject
+# DB-Project
 Database project
