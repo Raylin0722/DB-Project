@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<div class="container my-5">
+<div id="app" class="container my-5">
   <!-- 個人資料卡片 -->
   <div class="profile-card mb-4">
     <div class="row g-4 align-items-center">
@@ -39,26 +39,29 @@
       <div class="col-md-9">
         <h3 class="mb-3">{{ user.username }}</h3>
 
-        <div class="info-item"><div class="info-label">信箱：</div>
-          <div>{{ user.school_email }}</div></div>
+        <div class="info-item"><div class="info-label fs-5">信箱：</div>
+          <div class="fs-5">{{ user.school_email }}</div></div>
 
-        <div class="info-item"><div class="info-label">科系：</div>
-          <div>{{ user.department }}</div></div>
+        <div class="info-item"><div class="info-label fs-5">科系：</div>
+          <div class="fs-5">{{ user.department }}</div></div>
 
-        <div class="info-item"><div class="info-label">電話：</div>
-          <div>{{ user.phone }}</div></div>
+        <div class="info-item"><div class="info-label fs-5">電話：</div>
+          <div class="fs-5">{{ user.phone }}</div></div>
 
-        <div class="info-item"><div class="info-label">身分：</div>
-          <div>{{ user.role }}</div></div>
-          <div id="app" class="container my-5">
-            <button class="btn btn-outline-info mt-3 ms-2" @click="goToEditProfile">
+        <div class="info-item"><div class="info-label fs-5">身分：</div>
+          <div class="fs-5">
+            {% if user.role == 'member' %}
+              一般會員
+            {% elif user.role == 'admin'%}
+              管理員
+            {% endif %}
+          </div></div>
+          <div class="container my-3 d-flex gap-2">
+            <a href="/" class="btn btn-outline-primary mt-1">回首頁</a>
+            <button class="btn btn-outline-danger mt-1" @click="goToEditProfile">
               編輯個人資料
             </button>
           </div>
-        </div>
-        <div class="text-center mt-4">
-          <a href="/" class="btn btn-outline-primary">回首頁</a>
-        </div>
     </div>
   </div>
 <!-- 🔗 配對建議 -->
@@ -94,7 +97,7 @@
                 <td>{{ m.match_time }}</td>
                 <td class="text-center">
                   <!-- 確認配對 -->
-                  <form action="/match/{{ lost_id }}/{{ m.found_id }}/confirm" method="post" class="d-inline">
+                  <form action="/match/{{ lost_id }}{{ m.found_id }}/confirm" method="post" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-success">確認</button>
                   </form>
                   <!-- 刪除配對 -->
@@ -130,34 +133,31 @@
             </tr>
           </thead>
           <tbody>
-            {% for p in posts %}
-            <tr>
+            {% raw %}
+            <tr v-for="p in posts" :key="p.lost_id">
               <td>{{ p.lost_id }}</td>
               <td>{{ p.item_name }}</td>
               <td>{{ p.category }}</td>
               <td>{{ p.lost_location }}</td>
-              <td>{{ p.lost_time.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{{ formatDate(p.lost_time) }}</td>
               <td class="d-flex align-items-center gap-2">
-                  {% if p.status == 'confirmed' %}
-                    <span class="badge bg-success">已配對</span>
-                  {% elif p.status == 'open' %}
-                    <span class="badge bg-secondary">未配對</span>
-                  {% else %}
-                    <span class="badge bg-secondary">狀態錯誤</span>
-                  {% endif %}
+                <span class="badge" :class="p.status === 'confirmed' ? 'bg-success' : 'bg-secondary'">
+                  {{ p.status === 'confirmed' ? '已配對' : '未配對' }}
+                </span>
                 <div class="btn-group ms-auto">
-                    <!-- 延長按鈕（預設為 disabled）-->
-                    <form method="post" action="/lost/{{ p.lost_id }}/extend">
-                      <button type="submit" class="btn btn-sm btn-outline-success me-3" disabled>延長7天</button>
-                    </form>
-                    <!-- 刪除按鈕 -->
-                    <form method="post" action="/lost/{{ p.lost_id }}/delete" onsubmit="return confirm('確定要刪除這筆紀錄嗎？')">
-                      <button type="submit" class="btn btn-sm btn-outline-danger">刪除</button>
-                    </form>
+                  
+                  <button type="button" class="btn btn-sm btn-outline-success me-3"
+                          :disabled="!isExtendEnabled(p)" @click="extendItem(p.lost_id)">
+                    延長7天
+                  </button>
+                  
+                  <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteItem(p.lost_id)">
+                    刪除
+                  </button>
                 </div>
-              </td>              
+              </td>
             </tr>
-            {% endfor %}
+            {% endraw %}
           </tbody>
         </table>
       </div>
@@ -166,6 +166,9 @@
     {% endif %}
   </div>
 </div>
-<script src="{{ url_for('static', filename='profile.js') }}"></script>
+<script>
+  window.posts = {{ posts | tojson }};
+</script>
+<script src="/static/profile.js"></script>
 </body>
 </html>

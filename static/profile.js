@@ -8,6 +8,7 @@ createApp({
         school_email: '',
         phone: ''
       },
+      posts: window.posts|| [],
       successMsg: '',
       errorMsg: ''
     };
@@ -28,6 +29,40 @@ createApp({
     });
   },
   methods: {
+    isExtendEnabled(p) {
+    console.log(p.notified_at)
+    return !!p.notified_at;  
+    },
+    formatDate(datetimeString) {
+    const d = new Date(datetimeString);
+    return d.toLocaleString(); 
+    },
+    extendItem(lost_id) {
+      fetch(`/lost_items/${lost_id}/extend`, {
+        method: 'POST'
+      })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message);
+          if (data.status === 'success') location.reload();
+        })
+        .catch(err => alert('延長失敗：' + err));
+    },
+    deleteItem(lost_id) {
+      if (!confirm('確定要刪除這筆資料嗎？')) return;
+
+      fetch(`/lost_items/${lost_id}/delete`, {
+        method: 'POST'
+      })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message);
+          if (data.status === 'success') {
+            window.location.href = '/profile';
+          }
+        })
+        .catch(err => alert('刪除失敗：' + err));
+    },
     goToEditProfile() {
         window.location.href = '/edit_profile';
     }

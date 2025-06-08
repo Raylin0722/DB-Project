@@ -297,8 +297,10 @@ def notify_expiring_lost_items():
 
                 請於 24 小時內登入系統確認是否要延長登記時間，
                 否則該筆資料將會自動從系統中刪除。
+                
+                請登入後點擊"個人資訊"，至"我的遺失物登記紀錄"進行延長。
 
-                登入系統: https://your-domain.com/login
+                登入系統: https://lostfoundntnu.up.railway.app/
 
                 謝謝您使用本系統。
             '''
@@ -326,7 +328,7 @@ def delete_expired_lost_items():
         cursor.execute("""
             DELETE FROM LostItems
             WHERE notified_at IS NOT NULL
-            AND notified_at <= NOW() - INTERVAL 1 MINUTE
+            AND notified_at <= NOW() - INTERVAL 1 DAY
             AND status = 'open'
         """)
         conn.commit()

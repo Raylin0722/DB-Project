@@ -23,7 +23,7 @@ def profile():
 
         # 該使用者的遺失物
         cursor.execute("""
-            SELECT lost_id, item_name, category, lost_location, lost_time, status
+            SELECT lost_id, item_name, category, lost_location, lost_time, status, notified_at
             FROM LostItems
             WHERE user_id=%s
             ORDER BY lost_time DESC
@@ -95,4 +95,40 @@ def check_edit_profile():
 def edit_profile():
     return render_template('edit_profile.html')
 
+@profile_bp.route('/lost_items/<int:lost_id>/extend', methods=['POST'])
+def extend_lost_item(lost_id):
+    try:
+        conn = connection_pool.get_connection()
+        cursor = conn.cursor()
 
+        # 通常延長通知時間：往後延 7 天
+        cursor.execute("""
+            UPDATE LostItems
+            SET notify_at = DATE_ADD(NOW(), INTERVAL 7 DAY),
+                notified_at = NULL
+            WHERE lost_id = %s
+        """, (lost_id,))
+        conn.commit()
+
+        return jsonify({'status': 'success', 'message': '延長成功'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+    finally:
+        cursor.close()
+        conn.close()
+
+@profile_bp.route('/lost_items/<int:lost_id>/delete', methods=['POST'])
+def delete_lost_item(lost_id):
+    try:
+        conn = connection_pool.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM LostItems WHERE lost_id = %s", (lost_id,))
+        conn.commit()
+
+        return jsonify({'status': 'success', 'message': '刪除成功'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+    finally:
+        cursor.close()
+        conn.close()
