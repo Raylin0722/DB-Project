@@ -55,14 +55,67 @@
               編輯個人資料
             </button>
           </div>
-
-      </div>
+        </div>
+        <div class="text-center mt-4">
+          <a href="/" class="btn btn-outline-primary">回首頁</a>
+        </div>
     </div>
   </div>
-
+<!-- 🔗 配對建議 -->
+<div class="profile-card mt-4">
+    <h4 class="mb-3">尋找配對建議</h4>
+    {% if match_results %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">配對編號</th>
+              <th scope="col">我的遺失物</th>
+              <th scope="col">可能拾獲物</th>
+              <th scope="col">建立時間</th>
+              <th scope="col" class="text-center">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lost_id, matches in match_results.items() %}
+              {% for m in matches %}
+              <tr>
+                <td>{{ lost_id }}</td>
+                <td>
+                    <a href="/lost/{{ lost_id }}" class="link-primary">
+                      {{ m.lost_name }}
+                    </a>
+                  </td>                  
+                <td>
+                  <a href="/items/{{ m.found_id }}" class="link-primary">
+                    {{ m.found_name }}
+                  </a>
+                </td>
+                <td>{{ m.match_time }}</td>
+                <td class="text-center">
+                  <!-- 確認配對 -->
+                  <form action="/match/{{ lost_id }}/{{ m.found_id }}/confirm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-success">確認</button>
+                  </form>
+                  <!-- 刪除配對 -->
+                  <form action="/match/{{ lost_id }}/{{ m.found_id }}/delete" method="post" class="d-inline ms-1">
+                    <button type="submit" class="btn btn-sm btn-danger">刪除</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>          
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">目前沒有配對建議。</p>
+    {% endif %}
+</div>
+  
   <!-- 刊登失物紀錄 -->
-  <div class="profile-card">
-    <h4 class="mb-3">我的刊登紀錄</h4>
+  <div class="profile-card mt-4">
+    <h4 class="mb-3">我的遺失物登記紀錄</h4>
     {% if posts %}
       <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -71,29 +124,27 @@
               <th scope="col">編號</th>
               <th scope="col">物品名稱</th>
               <th scope="col">類別</th>
-              <th scope="col">地點</th>
+              <th scope="col">遺失地點</th>
               <th scope="col">時間</th>
               <th scope="col">狀態</th>
-              <th scope="col">操作</th>
             </tr>
           </thead>
           <tbody>
             {% for p in posts %}
             <tr>
-              <td>{{ p.found_id }}</td>
+              <td>{{ p.lost_id }}</td>
               <td>{{ p.item_name }}</td>
               <td>{{ p.category }}</td>
-              <td>{{ p.found_location }}</td>
-              <td>{{ p.found_time.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td>{{ p.lost_location }}</td>
+              <td>{{ p.lost_time.strftime('%Y-%m-%d %H:%M') }}</td>
               <td>
-                {% if p.status == 'claimed' %}
-                  <span class="badge bg-success">已領取</span>
+                {% if p.status == 'confirmed' %}
+                  <span class="badge bg-success">已配對</span>
+                {% elif p.status == 'open'%}
+                  <span class="badge bg-secondary">未配對</span>
                 {% else %}
-                  <span class="badge bg-secondary">待領取</span>
+                  <span class="badge bg-secondary">狀態錯誤</span>
                 {% endif %}
-              </td>
-              <td>
-                <a href="/items/{{ p.found_id }}" class="btn btn-sm btn-outline-primary">查看</a>
               </td>
             </tr>
             {% endfor %}

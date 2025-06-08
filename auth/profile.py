@@ -4,11 +4,11 @@ from flask_mail import Message
 from db import connection_pool
 from datetime import datetime, timedelta
 from flask import redirect
+from collections import defaultdict
 
 profile_bp = Blueprint('profile', __name__)
 @profile_bp.route('/profile')
 def profile():
-    # 這裡示範用 session 取登入者 ID
     user_id = session.get('user_id')
     if not user_id:
         return redirect('/login')
@@ -17,24 +17,55 @@ def profile():
         conn = connection_pool.get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 取使用者資料
+        # 使用者資料
         cursor.execute("SELECT * FROM Users WHERE user_id=%s", (user_id,))
         user = cursor.fetchone()
 
-        # 取該使用者刊登的失物紀錄
+        # 該使用者的遺失物
         cursor.execute("""
-            SELECT found_id, item_name, category, found_location,
-                   found_time, status
-            FROM FoundItems
+            SELECT lost_id, item_name, category, lost_location, lost_time, status
+            FROM LostItems
             WHERE user_id=%s
-            ORDER BY found_time DESC
+            ORDER BY lost_time DESC
         """, (user_id,))
         posts = cursor.fetchall()
+
+        lost_ids = [p['lost_id'] for p in posts]
+        match_results = defaultdict(list)
+
+        if lost_ids:
+            format_strings = ','.join(['%s'] * len(lost_ids))
+            cursor.execute(f"""
+                SELECT
+                    m.lost_id,
+                    m.found_id,
+                    DATE_FORMAT(m.match_time, '%Y-%m-%d %H:%i:%S') AS match_time,
+                    m.status,
+                    f.item_name AS found_name,
+                    l.item_name AS lost_name,
+                    f.category AS found_category,
+                    f.found_location,
+                    f.found_time
+                FROM Matches m
+                JOIN FoundItems f ON m.found_id = f.found_id
+                JOIN LostItems l ON m.lost_id = l.lost_id
+                WHERE m.lost_id IN ({format_strings})
+                AND m.status = 'open'
+                ORDER BY m.match_time DESC
+            """, tuple(lost_ids))
+
+            for row in cursor.fetchall():
+                match_results[row['lost_id']].append(row)
 
     finally:
         cursor.close(); conn.close()
 
-    return render_template('profile.html', user=user, posts=posts)
+    return render_template(
+        'profile.html',
+        user=user,
+        posts=posts,
+        match_results=match_results  # dict 格式：{lost_id: [匹配項們]}
+    )
 
 @profile_bp.route('/check_edit_profile', methods=['POST', 'GET'])
 def check_edit_profile():

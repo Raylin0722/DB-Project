@@ -3,6 +3,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Message
 from db import connection_pool
 from datetime import datetime, timedelta
+from flask import redirect
+from collections import defaultdict
 
 lostfound_bp = Blueprint('lostfound', __name__)
 
@@ -190,4 +192,46 @@ def send_match_email(result):
 
     current_app.mail.send(msg)
     
-   
+@lostfound_bp.route('/match/<int:lost_id>/<int:found_id>/confirm', methods=['POST'])
+def confirm_match(lost_id, found_id):
+    try:
+        conn = connection_pool.get_connection()
+        cursor = conn.cursor()
+
+        # 1. 更新該筆為 confirmed
+        cursor.execute("""
+            UPDATE Matches
+            SET status = 'confirmed'
+            WHERE lost_id = %s AND found_id = %s AND status = 'open'
+        """, (lost_id, found_id))
+
+        # # 2. 刪除其他相同 lost_id 的未中選配對
+        cursor.execute("""
+            DELETE FROM Matches
+            WHERE lost_id = %s AND found_id != %s AND status = 'open'
+        """, (lost_id, found_id))
+        conn.commit()
+        return redirect('/profile')
+
+    except Exception as e:
+        return f"更新錯誤：{e}", 500
+    finally:
+        cursor.close(); conn.close()
+
+@lostfound_bp.route('/match/<int:lost_id>/<int:found_id>/delete', methods=['POST'])
+def delete_match(lost_id, found_id):
+    try:
+        conn = connection_pool.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            DELETE FROM Matches
+            WHERE lost_id = %s AND found_id = %s AND status = 'open'
+        """, (lost_id, found_id))
+        conn.commit()
+        return redirect('/profile')
+
+    except Exception as e:
+        return f"刪除錯誤：{e}", 500
+    finally:
+        cursor.close(); conn.close()
