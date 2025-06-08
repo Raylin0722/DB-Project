@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function () {
         alert(result.message);
         confirmRejectBtn.disabled = false;
         cancelRejectBtn.disabled = false;
-        confirmRejectBtn.textContent = '確認駁檢舉';
+        confirmRejectBtn.textContent = '確認檢舉';
         cancelRejectBtn.setAttribute('data-bs-dismiss', 'modal');
         window.location.href = '/browse';
     } else { 

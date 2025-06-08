@@ -137,7 +137,7 @@
               <td>{{ p.item_name }}</td>
               <td>{{ p.category }}</td>
               <td>{{ p.lost_location }}</td>
-              <td>{{ p.lost_time }}</td>
+              <td>{{ formatDate(p.lost_time) }}</td>
               <td class="d-flex align-items-center gap-2">
                 <span class="badge" :class="p.status === 'confirmed' ? 'bg-success' : 'bg-secondary'">
                   {{ p.status === 'confirmed' ? '已配對' : '未配對' }}

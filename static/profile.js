@@ -33,9 +33,15 @@ createApp({
     console.log(p.notified_at)
     return !!p.notified_at;  
     },
-    formatDate(datetimeString) {
-    const d = new Date(datetimeString);
-    return d.toLocaleString(); 
+    formatDate(dateString) {
+      const date = new Date(dateString); 
+      const yyyy = date.getUTCFullYear();
+      const mm = String(date.getUTCMonth() + 1).padStart(2, '0'); 
+      const dd = String(date.getUTCDate()).padStart(2, '0');
+      const hh = String(date.getUTCHours()).padStart(2, '0');
+      const mi = String(date.getUTCMinutes()).padStart(2, '0');
+      const ss = String(date.getUTCSeconds()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     },
     extendItem(lost_id) {
       fetch(`/lost_items/${lost_id}/extend`, {
