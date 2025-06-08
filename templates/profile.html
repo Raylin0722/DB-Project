@@ -137,15 +137,25 @@
               <td>{{ p.category }}</td>
               <td>{{ p.lost_location }}</td>
               <td>{{ p.lost_time.strftime('%Y-%m-%d %H:%M') }}</td>
-              <td>
-                {% if p.status == 'confirmed' %}
-                  <span class="badge bg-success">已配對</span>
-                {% elif p.status == 'open'%}
-                  <span class="badge bg-secondary">未配對</span>
-                {% else %}
-                  <span class="badge bg-secondary">狀態錯誤</span>
-                {% endif %}
-              </td>
+              <td class="d-flex align-items-center gap-2">
+                  {% if p.status == 'confirmed' %}
+                    <span class="badge bg-success">已配對</span>
+                  {% elif p.status == 'open' %}
+                    <span class="badge bg-secondary">未配對</span>
+                  {% else %}
+                    <span class="badge bg-secondary">狀態錯誤</span>
+                  {% endif %}
+                <div class="btn-group ms-auto">
+                    <!-- 延長按鈕（預設為 disabled）-->
+                    <form method="post" action="/lost/{{ p.lost_id }}/extend">
+                      <button type="submit" class="btn btn-sm btn-outline-success me-3" disabled>延長7天</button>
+                    </form>
+                    <!-- 刪除按鈕 -->
+                    <form method="post" action="/lost/{{ p.lost_id }}/delete" onsubmit="return confirm('確定要刪除這筆紀錄嗎？')">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">刪除</button>
+                    </form>
+                </div>
+              </td>              
             </tr>
             {% endfor %}
           </tbody>
