@@ -205,11 +205,19 @@ def confirm_match(lost_id, found_id):
             WHERE lost_id = %s AND found_id = %s AND status = 'open'
         """, (lost_id, found_id))
 
-        # # 2. 刪除其他相同 lost_id 的未中選配對
+        # 2. 刪除其他相同 lost_id 的未中選配對
         cursor.execute("""
             DELETE FROM Matches
             WHERE lost_id = %s AND found_id != %s AND status = 'open'
         """, (lost_id, found_id))
+
+        # 3. 更新 LostItems 的狀態為 confirmed
+        cursor.execute("""
+            UPDATE LostItems
+            SET status = 'confirmed'
+            WHERE lost_id = %s
+        """, (lost_id,))
+
         conn.commit()
         return redirect('/profile')
 
