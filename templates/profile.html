@@ -97,7 +97,7 @@
                 <td>{{ m.match_time }}</td>
                 <td class="text-center">
                   <!-- 確認配對 -->
-                  <form action="/match/{{ lost_id }}{{ m.found_id }}/confirm" method="post" class="d-inline">
+                  <form action="/match/{{ lost_id }}/{{ m.found_id }}/confirm" method="post" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-success">確認</button>
                   </form>
                   <!-- 刪除配對 -->

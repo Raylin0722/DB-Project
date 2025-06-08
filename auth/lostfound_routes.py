@@ -20,8 +20,8 @@ def create_lost_item():
         cursor = conn.cursor()
         
         notification_period = int(data.get('notification_period') or 14)
-        notify_at= datetime.now()
-        # notify_at = datetime.now() + timedelta(days=notification_period - 1)
+        # notify_at= datetime.now()
+        notify_at = datetime.now() + timedelta(days=notification_period - 1)
         
         query = """
             INSERT INTO LostItems 
