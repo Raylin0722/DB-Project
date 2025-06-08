@@ -77,6 +77,6 @@
     mode: {{ mode|tojson|safe }}
   };
 </script>
-<script src="/static/manage_post.js"></script>
+<script src="{{ url_for('static', filename='manage_post.js') }}"></script>
 </body>
 </html>

@@ -73,7 +73,7 @@ def report_post():
                 R.created_at AS report_time,
                 F.found_id,
                 F.found_location,
-                DATE_FORMAT(F.found_time, '%Y-%m-%d %H:%i:%s') AS found_time,
+                F.found_time AS found_time,
                 F.item_name AS title,
                 F.category,
                 F.remark,
@@ -85,17 +85,18 @@ def report_post():
                 F.status AS found_status
             FROM Reports R
             JOIN FoundItems F ON R.target_id = F.found_id
-            ORDER BY R.created_at DESC;""")
+            where R.report_id = %s
+            ORDER BY R.created_at DESC;""", (rid,))
         report = cursor.fetchone()
         
     except Exception as e:
         print("讀取報告項目錯誤：", e)
-        return render_template('report.html', item=[])
+        return render_template('admin_report.html', item=[])
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
-
-    return render_template('report.html', item=report, from_page="adminManage")
+    print(report)
+    return render_template('admin_report.html', item=report, from_page="adminManage")
 
 @post_bp.route('/send_report', methods=['POST'])
 def send_report():
@@ -159,3 +160,43 @@ def send_report():
         return jsonify({"status": "error", "message": "未知的模式"}), 400
     print("送出檢舉：", mode, rid, reasons)
     return jsonify({"status": "success"}), 200
+
+
+@post_bp.route('/report', methods=['POST'])
+def report():
+    fid = request.form.get('fid')
+    reasons = request.form.getlist('reasons')
+    
+    try:
+        conn = connection_pool.get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM Reports WHERE target_id = %s and status='accept'", (fid,))
+        existing_report = cursor.fetchall()
+        if existing_report:
+            return jsonify({"status": "success", "message": "此失物項目已被檢舉"}), 400
+    except Exception as e:
+        print("讀取失物項目錯誤：", e)
+        return jsonify({"status": "error", "message": "讀取失物項目失敗"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
+        
+    
+    try:
+        conn = connection_pool.get_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute("""
+            insert into Reports (target_id, description, status, created_at)
+            values (%s, %s, 'open', NOW())
+        """, (fid, reasons[0]))
+        conn.commit()
+        
+    except Exception as e:
+        print("寫入失物項目錯誤：", e)
+        return jsonify({"status": "error", "message": "寫入失物項目失敗"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
+
+    return jsonify({"status": "success", "message": "檢舉成功"}), 200

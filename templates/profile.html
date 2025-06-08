@@ -90,7 +90,7 @@
                     </a>
                   </td>                  
                 <td>
-                  <a href="/items/{{ m.found_id }}" class="link-primary">
+                  <a href="/items/{{ m.found_id }}?from_page=profile" class="link-primary">
                     {{ m.found_name }}
                   </a>
                 </td>
@@ -101,7 +101,7 @@
                     <button type="submit" class="btn btn-sm btn-success">確認</button>
                   </form>
                   <!-- 刪除配對 -->
-                  <form action="/match/{{ lost_id }}/{{ m.found_id }}/delete" method="post" class="d-inline ms-1">
+                  <form action="/match/{{ lost_id }}/{{ m.found_id }}/delete" method="post" class="d-inline ms-1" onsubmit="return confirm('確定要刪除此配對紀錄嗎？')">
                     <button type="submit" class="btn btn-sm btn-danger">刪除</button>
                   </form>
                 </td>
