@@ -68,18 +68,40 @@ def adminManage():
         cursor2 = conn2.cursor(dictionary=True)
         cursor2.execute(lost_query, params)
         lost = cursor2.fetchall()
+        report = []
+        conn3 = connection_pool.get_connection()
+        cursor3 = conn3.cursor(dictionary=True)
+        cursor3.execute("""SELECT 
+                R.report_id,
+                R.description AS report_description,
+                R.status AS report_status,
+                R.created_at AS report_time,
+                F.found_id,
+                F.found_location AS location,
+                DATE_FORMAT(F.found_time, '%Y-%m-%d %H:%i:%s') AS date,
+                F.item_name AS title,
+                F.category,
+                F.remark AS description
+            FROM Reports R
+            JOIN FoundItems F ON R.target_id = F.found_id
+            ORDER BY R.created_at DESC;""")
+        report = cursor3.fetchall()
+        
     except Exception as e:
         print("讀取 FoundItems/LostItems 錯誤：", e)
         found = []
         lost = []
+        report = []
     finally:
         if 'cursor1' in locals(): cursor1.close()
         if 'conn1' in locals(): conn1.close()
         if 'cursor2' in locals(): cursor2.close()
         if 'conn2' in locals(): conn2.close()
+        if 'cursor3' in locals(): cursor3.close()
+        if 'conn3' in locals(): conn3.close()
 
-
-    return render_template('manager.html', mode='admin', found=found, lost=lost)
+    print(report)
+    return render_template('manager.html', mode='admin', found=found, lost=lost, report=report)
 
 @admin_bp.route('/adminDelete', methods=['GET', 'POST'])
 @admin_required

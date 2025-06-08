@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ item.item_name }} - 檢舉詳情</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .detail-card {
+      background-color: #fff;
+      border-radius: 18px;
+      padding: 30px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+    .item-image {
+      max-height: 340px;
+      border-radius: 10px;
+      object-fit: contain;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+    .item-image:hover {
+      transform: scale(1.03);
+    }
+    .info-label {
+      font-weight: bold;
+      color: #555;
+      min-width: 120px;
+    }
+    .info-item {
+      margin-bottom: 12px;
+      display: flex;
+    }
+    .info-value {
+      flex-grow: 1;
+      color: #333;
+    }
+    .no-image {
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="container my-5">
+  <div class="detail-card">
+    <div class="row g-4 align-items-center">
+      <div class="col-md-5 text-center">
+        {% if item.image_url %}
+          <img src="{{ item.image_url }}" alt="失物圖片" class="img-fluid item-image">
+        {% else %}
+          <img src="{{ url_for('static', filename='default.jpg') }}" alt="預設圖片" class="img-fluid item-image">
+          <div class="no-image">尚未提供圖片</div>
+        {% endif %}
+      </div>
+
+      <div class="col-md-7">
+        <h3 class="mb-3">{{ item.item_name }}</h3>
+
+        <div class="info-item"><div class="info-label">分類：</div><div class="info-value">{{ item.category }}</div></div>
+        <div class="info-item"><div class="info-label">拾獲校區：</div><div class="info-value">{{ item.found_campus }}</div></div>
+        <div class="info-item"><div class="info-label">拾獲地點：</div><div class="info-value">{{ item.found_location }}</div></div>
+        <div class="info-item"><div class="info-label">拾獲時間：</div><div class="info-value">{{ item.found_time }}</div></div>
+        <div class="info-item"><div class="info-label">存放地點：</div><div class="info-value">{{ item.storage_location }}</div></div>
+        <div class="info-item"><div class="info-label">聯絡電話：</div><div class="info-value">{{ item.contact_phone }}</div></div>
+        <div class="info-item"><div class="info-label">聯絡信箱：</div><div class="info-value">{{ item.contact_email }}</div></div>
+        <div class="info-item"><div class="info-label">狀態：</div>
+          <div class="info-value">
+            {% if item.found_status == 'open' %}尚未領取
+            {% elif item.found_status == 'claimed' %}已領取
+            {% else %}{{ item.found_status }}
+            {% endif %}
+          </div>
+        </div>
+        <div class="info-item"><div class="info-label">備註：</div><div class="info-value">{% if item.remark %}{{ item.remark }}{% else %}無{% endif %}</div></div>
+        <div class="info-item"><div class="info-label">檢舉時間：</div><div class="info-value text-danger">{{ item.report_time }}</div></div>
+        <div class="info-item"><div class="info-label">檢舉原因：</div><div class="info-value text-danger">{{ item.report_description }}</div></div>
+        <div class="info-item"><div class="info-label">檢舉狀態：</div>
+          <div class="info-value text-danger">
+            {% if item.report_status == 'open' %}尚未處理
+            {% elif item.report_status == 'reject' %}已駁回
+            {% elif item.report_status == 'accept' %}已接受
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- 操作按鈕 -->
+        <div class="info-item mt-3">
+          <div class="info-label"></div>
+          <div class="info-value">
+            <div class="d-flex gap-2">
+              <a href="{% if from_page == 'adminManage' %}/adminManage{% else %}/browse{% endif %}" class="btn btn-outline-primary">返回</a>
+              {% if item.report_status == 'open' %}
+                <button type="button" class="btn btn-success" onclick="openAcceptModal({{ item.report_id }}, '{{ item.report_description }}')">接受</button>
+                <button type="button" class="btn btn-danger" onclick="openRejectModal({{ item.report_id }})">拒絕</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 接受 modal -->
+<div class="modal fade" id="acceptModal" tabindex="-1" aria-labelledby="acceptModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="acceptModalLabel">確認接受檢舉</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+      </div>
+      <div class="modal-body">
+        <p>請確認本次接受的檢舉理由：</p>
+        <div id="accept-reason-list" class="form-check"></div>
+        <input type="hidden" id="accept-report-id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" id="confirmAcceptBtn">確認接受</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelBtn">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 拒絕 modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="rejectModalLabel">確認駁回檢舉</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+      </div>
+      <div class="modal-body">
+        <p>請勾選駁回此檢舉的理由：</p>
+        <div id="reject-reason-list" class="form-check"></div>
+        <input type="hidden" id="reject-report-id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="confirmRejectBtn">確認駁回</button>
+        <button type="button" class="btn btn-secondary" id="cancelRejectBtn" data-bs-dismiss="modal">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="static/report.js"></script>
+
+</body>
+</html>

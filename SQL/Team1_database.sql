@@ -53,7 +53,7 @@ CREATE TABLE FoundItems (
 );
 
 CREATE TABLE Reports (
-    report_id INT PRIMARY KEY,
+    report_id INT PRIMARY KEY AUTO_INCREMENT,
     target_id INT,
     FOREIGN KEY (target_id) REFERENCES FoundItems(found_id) ON DELETE CASCADE,
     description TEXT,

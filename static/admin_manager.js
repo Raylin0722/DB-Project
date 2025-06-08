@@ -12,17 +12,28 @@ const adminApp = createApp({
             type: urlType || window.adminType || 'found',
             foundItems: window.pageData.found || [],
             lostItems: window.pageData.lost || [],
-            items: window.pageData.found || [],
+            reportItems: window.pageData.report || [], // 新增
+            items: (urlType === 'lost')
+            ? (window.pageData.lost || [])
+            : (urlType === 'report')
+                ? (window.pageData.report || [])
+                : (window.pageData.found || []),
         };
     },
     methods: {
         switchType(type) {
             this.type = type;
-            this.items = type === 'found' ? this.foundItems : this.lostItems;
+            if (type === 'found') {
+                this.items = this.foundItems;
+            } else if (type === 'lost') {
+                this.items = this.lostItems;
+            } else if (type === 'report') {
+                this.items = this.reportItems;
+            }
             window.adminType = type;
             const params = new URLSearchParams(window.location.search);
-    params.set('type', type);
-    window.history.replaceState({}, '', `${location.pathname}?${params}`);
+            params.set('type', type);
+            window.history.replaceState({}, '', `${location.pathname}?${params}`);
             // 同步 click-app
             if (window.clickAppInstance) {
                 window.clickAppInstance.type = type;
@@ -70,11 +81,24 @@ const adminApp = createApp({
     },
     computed: {
         emptyText() {
-            return this.type === 'found' ? '暫無拾獲物資訊' : '暫無遺失物資訊';
+            if (this.type === 'found') {
+                return '暫無拾獲物資訊';
+            } else if (this.type === 'lost') {
+                return '暫無遺失物資訊';
+            } else if (this.type === 'report') {
+                return '暫無檢舉資訊';
+            }
+            return '';
         }
     },
     mounted() {
-        this.items = this.type === 'found' ? this.foundItems : this.lostItems;
+        if (this.type === 'found') {
+            this.items = this.foundItems;
+        } else if (this.type === 'lost') {
+            this.items = this.lostItems;
+        } else if (this.type === 'report') {
+            this.items = this.reportItems;
+        }
         window.adminAppInstance = this;
         console.log('刷新後當前 type:', this.type); // 新增這行
     }
