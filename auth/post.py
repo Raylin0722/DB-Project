@@ -113,7 +113,7 @@ def send_report():
             cursor.execute("UPDATE Reports SET status = 'accept', description=%s WHERE report_id = %s", (reasons[0], rid))
             conn.commit()
             cursor.execute("""
-                SELECT u.school_email, f.item_name, r.description
+                SELECT u.school_email, f.item_name, r.description, r.target_id
                 FROM Reports r
                 JOIN FoundItems f ON r.target_id = f.found_id
                 JOIN Users u ON f.user_id = u.user_id
@@ -124,6 +124,7 @@ def send_report():
                 recipient_email = result[0]
                 item_name = result[1]
                 report_description = result[2]
+                found_id = result[3]
 
                 msg = Message(subject="您的失物貼文被檢舉並確認",
                               recipients=[recipient_email])
@@ -131,6 +132,9 @@ def send_report():
                 current_app.mail.send(msg)
 
                 print("準備寄信給：", recipient_email)
+                cursor.execute("DELETE FROM FoundItems WHERE found_id = %s", (found_id,))
+                conn.commit()
+                print("已刪除失物貼文：", found_id)
             else:
                 print("找不到對應的用戶或貼文")
         except Exception as e:
