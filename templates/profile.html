@@ -85,9 +85,7 @@
               <tr>
                 <td>{{ lost_id }}</td>
                 <td>
-                    <a class="link-primary">
-                      {{ m.lost_name }}
-                    </a>
+                    <p>{{ m.lost_name }}</p>
                   </td>                  
                 <td>
                   <a href="/items/{{ m.found_id }}?from_page=profile" class="link-primary">
@@ -139,7 +137,7 @@
               <td>{{ p.item_name }}</td>
               <td>{{ p.category }}</td>
               <td>{{ p.lost_location }}</td>
-              <td>{{ formatDate(p.lost_time) }}</td>
+              <td>{{ p.lost_time }}</td>
               <td class="d-flex align-items-center gap-2">
                 <span class="badge" :class="p.status === 'confirmed' ? 'bg-success' : 'bg-secondary'">
                   {{ p.status === 'confirmed' ? '已配對' : '未配對' }}
