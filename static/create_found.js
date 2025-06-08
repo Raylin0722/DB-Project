@@ -24,7 +24,8 @@ createApp({
       user: null,
       imageFile: null,
       statusMessage: '',
-      statusClass: ''
+      statusClass: '',
+      isSubmitting: false,
     };
   },
   mounted() {
@@ -74,6 +75,10 @@ createApp({
       };
     },
     async submitForm() {
+      
+      this.statusMessage = '';
+      this.statusClass = '';
+      
       if (!this.isRequiredFieldsFilled) {
         this.statusMessage = '⚠ 請填寫所有必填欄位';
         this.statusClass = 'alert-warning';
@@ -84,10 +89,25 @@ createApp({
         this.statusClass = 'alert-warning';
         return;
       }
+
+      if (this.isSubmitting) return; // 防止連點
+      this.isSubmitting = true;      // 設定為送出中
+
       try {
-        const uploadResult = await this.uploadImageToCloudinary();
-        this.form.image_url = uploadResult.image_url;
-        this.form.cloudinary_id = uploadResult.cloudinary_id;
+        if (this.selectedImageFile) {
+          const uploadResult = await this.uploadImageToCloudinary();
+          if (!uploadResult) {
+            this.statusMessage = '❌ 圖片上傳失敗，請重試';
+            this.statusClass = 'alert-danger';
+            this.isSubmitting = false;
+            return;
+          }
+          this.form.image_url = uploadResult.image_url;
+          this.form.cloudinary_id = uploadResult.cloudinary_id;
+        } else {
+          this.form.image_url = null;
+          this.form.cloudinary_id = null;
+        }
 
         const response = await fetch('/found_items/create', {
           method: 'POST',

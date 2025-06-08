@@ -23,6 +23,7 @@ createApp({
       user: null, 
       statusMessage: '',
       statusClass: '',
+      isSubmitting: false,
     }
   },
   mounted() {
@@ -51,6 +52,10 @@ createApp({
       window.location = document.referrer || '/browse'; 
     },
     async submitForm() {
+      
+      this.statusMessage = '';
+      this.statusClass = '';
+
     if (!this.isRequiredFieldsFilled) {
       this.statusMessage = '⚠ 請填寫所有必填欄位';
       this.statusClass = 'alert-warning';
@@ -61,6 +66,9 @@ createApp({
       this.statusClass = 'alert-warning';
       return;
     }
+
+    if (this.isSubmitting) return; // 防止連點
+    this.isSubmitting = true;      // 設定為送出中
     try {
         const response = await fetch('/lost_items/create', {
           method: 'POST',

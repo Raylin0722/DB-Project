@@ -31,8 +31,8 @@
 		    <small class="text-muted">您是以 <strong>{{ mode }}</strong> 身份瀏覽此頁面。</small>
 		  </div>
 		  <div class="d-flex gap-2">
+			<a href="{{ url_for('lostfound.create_found_page') }}" class="btn btn-outline-success">刊登拾獲物</a>
 		    <a href="{{ url_for('lostfound.create_lost_page') }}" class="btn btn-outline-danger">登記遺失物</a>
-		    <a href="{{ url_for('lostfound.create_found_page') }}" class="btn btn-outline-success">刊登拾獲物</a>
 		  </div>
 		</div>
 

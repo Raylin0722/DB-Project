@@ -94,7 +94,7 @@
           </div>
 
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg">送出</button>
+            <button type="submit" class="btn btn-primary btn-lg" :disabled="isSubmitting">送出</button>
             <button type="button" class="btn btn-outline-secondary btn-lg" @click="goBack">取消</a>
           </div>
         </form>

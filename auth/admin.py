@@ -93,8 +93,10 @@ def delete_item():
             
             cursor.execute("SELECT cloudinary_id FROM FoundItems WHERE found_id = %s", (item_id,))
             result = cursor.fetchone()
-            if result and result['cloudinary_id']:
-                cloudinary.uploader.destroy(result['cloudinary_id'])
+            if result:
+                cloudinary_id = result.get('cloudinary_id')
+                if cloudinary_id and cloudinary_id.strip():
+                    cloudinary.uploader.destroy(cloudinary_id)
                 
             cursor.execute("DELETE FROM FoundItems WHERE found_id = %s", (item_id,))
         elif target == 'lost':
