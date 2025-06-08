@@ -224,6 +224,12 @@ def confirm_match(lost_id, found_id):
             SET status = 'confirmed'
             WHERE lost_id = %s
         """, (lost_id,))
+        
+        cursor.execute("""
+            UPDATE FoundItems
+            SET status = 'confirmed'
+            WHERE found_id = %s
+        """, (found_id,))
 
         conn.commit()
         return redirect('/profile')
