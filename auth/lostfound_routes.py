@@ -46,8 +46,8 @@ def create_lost_item():
             notify_at
         ))
         conn.commit()
-        newID = cursor.lastrowid
-        match_after_insert('lost', newID)
+        # newID = cursor.lastrowid
+        # match_after_insert('lost', newID)
         
         return jsonify({"message": "Lost item created successfully"}), 201
     except Exception as e:
@@ -92,8 +92,8 @@ def create_found_item():
             data.get('user_id')  
         ))
         conn.commit()
-        newID = cursor.lastrowid
-        match_after_insert('found', newID)
+        # newID = cursor.lastrowid
+        # match_after_insert('found', newID)
         
         return jsonify({"message": "Found item created successfully"}), 201
 
@@ -111,6 +111,54 @@ def create_lost_page():
 def create_found_page():
     return render_template('create_found.html')
 
+@lostfound_bp.route('/match_after_insert', methods=['POST'])
+def match_after_insert():
+    token = request.args.get('token')
+    if token != current_app.config['CRON_TOKEN']:
+        return jsonify({'status': 'unauthorized'}), 403
+    
+    match_result = {}
+    conn = connection_pool.get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT * FROM FoundItems WHERE status = 'open'")
+        found_list = cursor.fetchall()
+        # 查所有 lost
+        cursor.execute("SELECT * FROM LostItems WHERE status = 'open'")
+        lost_list = cursor.fetchall()
+        # 配對
+        for lost in lost_list:
+            for found in found_list:
+                if match_items(lost, found):
+                    match_result.setdefault(lost['lost_id'], []).append(found['found_id'])
+                    print(f"Found {found['found_id']} 配對 Lost {lost['lost_id']}")
+    except Exception as e:
+        print("配對失敗：", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
+    
+    if match_result:
+        for lost_id, found_ids in match_result.items():
+            cursor.execute("""SELECT U.username, U.school_email
+            FROM LostItems L
+            JOIN Users U ON L.user_id = U.user_id
+            WHERE L.lost_id = %s;""", (lost_id,))
+            result = cursor.fetchone()
+            for found_id in found_ids:
+                cursor.execute(
+                    """INSERT INTO Matches(lost_id, found_id, match_time, status)
+                    VALUES (%s, %s, NOW(), 'open')""",
+                    (lost_id, found_id)
+                )
+            conn.commit()
+            if result:
+                send_match_email(result)
+
+    if 'cursor' in locals(): cursor.close()
+    if 'conn' in locals(): conn.close()
+
 
 def match_items(lost_item, found_item):
     
@@ -119,7 +167,7 @@ def match_items(lost_item, found_item):
     
     # 比對時間範圍（12 小時）
     time_diff = abs((lost_item['lost_time'] - found_item['found_time']).total_seconds())
-    if time_diff > 3600 * 12:
+    if time_diff > 3600 * 24:
         return False
 
     # 比對地點與校區
@@ -141,54 +189,6 @@ def match_items(lost_item, found_item):
 
     return False
 
-
-def match_after_insert(item_type, item_id):
-    match_result = {}
-    conn = connection_pool.get_connection()
-    cursor = conn.cursor(dictionary=True)
-    if item_type == 'found':
-        # 查出這筆 found
-        cursor.execute("SELECT * FROM FoundItems WHERE found_id = %s", (item_id,))
-        found = cursor.fetchone()
-        # 查所有 lost
-        cursor.execute("SELECT * FROM LostItems WHERE status = 'open'")
-        lost_list = cursor.fetchall()
-        # 配對
-        for lost in lost_list:
-            if match_items(lost, found):
-                match_result.setdefault(lost['lost_id'], []).append(found['found_id'])
-                print(f"Found {found['found_id']} 配對 Lost {lost['lost_id']}")
-    elif item_type == 'lost':
-        cursor.execute("SELECT * FROM LostItems WHERE lost_id = %s", (item_id,))
-        lost = cursor.fetchone()
-        cursor.execute("SELECT * FROM FoundItems WHERE status = 'open'")
-        found_list = cursor.fetchall()
-        for found in found_list:
-            if match_items(lost, found):
-                match_result.setdefault(lost['lost_id'], []).append(found['found_id'])
-                    
-                print(f"Lost {lost['lost_id']} 配對 Found {found['found_id']}")
-    
-    
-    if match_result:
-        for lost_id, found_ids in match_result.items():
-            cursor.execute("""SELECT U.username, U.school_email
-            FROM LostItems L
-            JOIN Users U ON L.user_id = U.user_id
-            WHERE L.lost_id = %s;""", (lost_id,))
-            result = cursor.fetchone()
-            for found_id in found_ids:
-                cursor.execute(
-                    """INSERT INTO Matches(lost_id, found_id, match_time, status)
-                    VALUES (%s, %s, NOW(), 'open')""",
-                    (lost_id, found_id)
-                )
-            conn.commit()
-            if result:
-                send_match_email(result)
-
-    if 'cursor' in locals(): cursor.close()
-    if 'conn' in locals(): conn.close()
 
 
 def send_match_email(result):
