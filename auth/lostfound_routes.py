@@ -135,9 +135,7 @@ def match_after_insert():
     except Exception as e:
         print("配對失敗：", str(e))
         return jsonify({"status": "error", "message": str(e)}), 500
-    finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'conn' in locals(): conn.close()
+    
     
     if match_result:
         for lost_id, found_ids in match_result.items():
