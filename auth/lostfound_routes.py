@@ -195,7 +195,7 @@ def send_match_email(result):
 
     師大校園失物招領系統 敬上
 
-    （此信件由系統自動發出，請勿回覆本信件）'''
+    此信件由系統自動發出，請勿回覆本信件'''
 
     current_app.mail.send(msg)
     
@@ -308,7 +308,11 @@ def notify_expiring_lost_items():
 
                 登入系統: https://lostfoundntnu.up.railway.app/
 
-                謝謝您使用本系統。
+                謝謝您使用本系統！
+
+                師大校園失物招領系統 敬上
+
+                此信件由系統自動發出，請勿回覆本信件
             '''
             current_app.mail.send(msg)
 

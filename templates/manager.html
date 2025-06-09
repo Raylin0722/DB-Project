@@ -28,9 +28,9 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h2 class="card-title mb-0">貼文管理</h2>
                 <div id="click-app">
-                    <button class="btn btn-outline-success me-2" :class="{active: type==='report'}" @click="switchType('report')">檢舉</button>
-                    <button class="btn btn-outline-success me-2" :class="{active: type==='found'}" @click="switchType('found')">拾獲物</button>
-                    <button class="btn btn-outline-danger" :class="{active: type==='lost'}" @click="switchType('lost')">遺失物</button>
+                    <button class="btn btn-outline-warning me-2" :class="{active: type==='report'}" @click="switchType('report')">查看檢舉紀錄</button>
+                    <button class="btn btn-outline-success me-2" :class="{active: type==='found'}" @click="switchType('found')">管理拾獲物</button>
+                    <button class="btn btn-outline-danger" :class="{active: type==='lost'}" @click="switchType('lost')">管理遺失物</button>
                 </div>
             </div>
 

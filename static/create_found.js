@@ -17,6 +17,7 @@ createApp({
         remark: '',
         user_id: null
       },
+      imagePreview: null,
       campusOptions: [],
       locationOptions: [],
       locationMap: {},
@@ -51,11 +52,37 @@ createApp({
       });
   },
   methods: {
+    triggerFileSelect() {
+      this.$refs.fileInput.click();
+    },
+    handleImageChange(event) {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+
+        this.imageFile = file;
+      
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.imagePreview = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    handleDrop(event) {
+      const file = event.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) {
+        this.imagePreview = URL.createObjectURL(file);
+      }
+    },
+    removeImage() {
+      if (this.imagePreview) {
+        URL.revokeObjectURL(this.imagePreview);
+        this.imagePreview = null;
+      }
+      this.$refs.fileInput.value = '';
+    },
     goBack() {
       window.location = document.referrer || '/browse'; 
-    },
-    handleImageChange(e) {
-      this.imageFile = e.target.files[0];
     },
     async uploadImageToCloudinary() {
       if (!this.imageFile) return null;

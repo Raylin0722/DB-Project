@@ -96,7 +96,7 @@
                 <td class="text-center">
                   <!-- 確認配對 -->
                   <form action="/match/{{ lost_id }}/{{ m.found_id }}/confirm" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-success">確認</button>
+                    <button type="submit" class="btn btn-sm btn-success me-3">確認</button>
                   </form>
                   <!-- 刪除配對 -->
                   <form action="/match/{{ lost_id }}/{{ m.found_id }}/delete" method="post" class="d-inline ms-1" onsubmit="return confirm('確定要刪除此配對紀錄嗎？')">

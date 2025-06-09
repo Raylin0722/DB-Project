@@ -17,9 +17,7 @@
     <div class="card shadow form-card">
       <div class="card-body p-4">
         <h2 class="card-title mb-4 text-center">登記遺失物</h2>
-        <div v-if="statusMessage" :class="['alert', statusClass]" role="alert">
-          {% raw %}{{ statusMessage }}{% endraw %}
-        </div>
+       
         <form @submit.prevent="submitForm" novalidate>
           <div class="mb-3">
             <label class="form-label">物品名稱 <span class="text-danger">*</span></label>
@@ -92,7 +90,9 @@
             <label class="form-label">備註 / 特徵描述</label>
             <textarea class="form-control" v-model="form.remark" rows="4"></textarea>
           </div>
-
+           <div v-if="statusMessage" :class="['alert', statusClass]" role="alert">
+            {% raw %}{{ statusMessage }}{% endraw %}
+          </div>
           <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary btn-lg" :disabled="isSubmitting">送出</button>
             <button type="button" class="btn btn-outline-secondary btn-lg" @click="goBack">取消</a>
