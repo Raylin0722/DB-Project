@@ -147,8 +147,9 @@ def match_after_insert():
             for found_id in found_ids:
                 cursor.execute(
                     """INSERT INTO Matches(lost_id, found_id, match_time, status)
-                    VALUES (%s, %s, NOW(), 'open')""",
-                    (lost_id, found_id)
+                    VALUES (%s, %s, NOW(), 'open') WHERE NOT EXISTS (
+                        SELECT 1 FROM Matches WHERE lost_id = %s AND found_id = %s)""",
+                    (lost_id, found_id, lost_id, found_id)
                 )
             conn.commit()
             if result:
@@ -156,7 +157,6 @@ def match_after_insert():
 
     if 'cursor' in locals(): cursor.close()
     if 'conn' in locals(): conn.close()
-
 
 def match_items(lost_item, found_item):
     
@@ -186,8 +186,6 @@ def match_items(lost_item, found_item):
         return fuzzy_match(lost_item['item_name'], found_item['item_name'], threshold=0.2)
 
     return False
-
-
 
 def send_match_email(result):
     
@@ -259,7 +257,8 @@ def delete_match(lost_id, found_id):
         cursor = conn.cursor()
 
         cursor.execute("""
-            DELETE FROM Matches
+            UPDATE Matches
+            SET status = 'reject'
             WHERE lost_id = %s AND found_id = %s AND status = 'open'
         """, (lost_id, found_id))
         conn.commit()
