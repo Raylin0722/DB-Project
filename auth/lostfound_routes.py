@@ -146,10 +146,12 @@ def match_after_insert():
             result = cursor.fetchone()
             for found_id in found_ids:
                 cursor.execute(
-                    """INSERT INTO Matches(lost_id, found_id, match_time, status)
-                    VALUES (%s, %s, NOW(), 'open') WHERE NOT EXISTS (
-                        SELECT 1 FROM Matches WHERE lost_id = %s AND found_id = %s)""",
-                    (lost_id, found_id, lost_id, found_id)
+                    '''INSERT INTO Matches (lost_id, found_id, match_time, status)
+                    SELECT %s, %s, NOW(), 'open'
+                    FROM Dual
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM Matches WHERE lost_id = %s AND found_id = %s
+                    );''', (lost_id, found_id, lost_id, found_id)
                 )
             conn.commit()
             if result:
