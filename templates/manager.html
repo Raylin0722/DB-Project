@@ -35,10 +35,16 @@
             </div>
 
             <!-- 搜尋欄 -->
-            <form class="input-group my-4" method="get" action="">
-                <input type="text" class="form-control" name="q" placeholder="輸入關鍵字搜尋...">
-                <input type="hidden" name="mode" value="{{ mode }}">
-                <button class="btn btn-primary" type="submit">搜尋</button>
+            <form class="input-group my-4"
+                  method="get"
+                  action="{{ url_for('admin.adminManage') }}">
+              <input type="text"
+                     class="form-control"
+                     name="q"
+                     placeholder="輸入關鍵字搜尋..."
+                     value="{{ request.args.get('q', '') }}">
+              <input type="hidden" name="mode" value="{{ mode }}">
+              <button class="btn btn-primary" type="submit">搜尋</button>
             </form>
 
             <!-- 貼文清單 -->
@@ -57,10 +63,10 @@
                 </div>
 					<a
                         :href="type === 'found'
-    ? '/items/' + item.id + '?from_page=adminManage'
-    : type === 'lost'
-        ? '/lostitems/' + item.id + '?from_page=adminManage'
-        : '/reportitems?from_page=adminManage&fid=' + item.found_id + '&rid=' + item.report_id"
+                        ? '/items/' + item.id + '?from_page=adminManage'
+                        : type === 'lost'
+                            ? '/lostitems/' + item.id + '?from_page=adminManage'
+                            : '/reportitems?from_page=adminManage&fid=' + item.found_id + '&rid=' + item.report_id"
                         class="btn btn-sm btn-outline-primary ms-auto"
                         >
                         詳情
@@ -94,6 +100,12 @@ window.pageData = {
     report: {{ report|tojson|safe }}
 };
 console.log('Page data:', window.pageData);
+
+if (window.location.search.includes('q=')) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('q');
+    window.history.replaceState({}, '', url);  
+  }
 </script>
 <script src="{{ url_for('static', filename='admin_manager.js') }}"></script>
 </body>
