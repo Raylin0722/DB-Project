@@ -159,6 +159,8 @@ def match_after_insert():
 
     if 'cursor' in locals(): cursor.close()
     if 'conn' in locals(): conn.close()
+    
+    return jsonify({"status": "success", "message": "配對完成"}), 200
 
 def match_items(lost_item, found_item):
     
