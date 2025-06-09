@@ -14,94 +14,108 @@ def admin_required(f):
 
 admin_bp = Blueprint('admin', __name__)
 
-@admin_bp.route('/adminManage', methods=['GET', 'POST'])
+@admin_bp.route('/adminManage', methods=['GET'])
 @admin_required
 def adminManage():
-    mode = request.args.get('mode', 'guest')
+    # 讀取 mode, keyword
+    mode = request.args.get('mode', 'admin')
     keyword = request.args.get('q', '').strip()
 
-    # 查詢語句模板
-    base_query = """
-        SELECT 
-            {id_col} AS id,
-            item_name AS title,
+    # --- FoundItems SQL ---
+    found_sql = """
+        SELECT
+            found_id      AS id,
+            item_name     AS title,
             category,
-            {location_col} AS location,
-            DATE_FORMAT({time_col}, '%Y-%m-%d %H:%i:%s') AS date,
-            remark AS description
-        FROM {table}
-        {where_clause}
-        ORDER BY {time_col} DESC
+            found_location AS location,
+            DATE_FORMAT(found_time, '%Y-%m-%d %H:%i:%s') AS date,
+            remark        AS description
+        FROM FoundItems
+    """
+    if keyword:
+        # 簡單把單引號逃脫，然後包成 '%關鍵字%'
+        safe = keyword.replace("'", "''")
+        found_sql += f"""
+        WHERE item_name      LIKE '%{safe}%'
+           OR remark         LIKE '%{safe}%'
+           OR found_location LIKE '%{safe}%'
+        """
+    found_sql += " ORDER BY found_time DESC;"
+
+    # --- LostItems SQL ---
+    lost_sql = """
+        SELECT
+            lost_id        AS id,
+            item_name      AS title,
+            category,
+            lost_location  AS location,
+            DATE_FORMAT(lost_time, '%Y-%m-%d %H:%i:%s') AS date,
+            remark         AS description
+        FROM LostItems
+    """
+    if keyword:
+        safe = keyword.replace("'", "''")
+        lost_sql += f"""
+        WHERE item_name     LIKE '%{safe}%'
+           OR remark        LIKE '%{safe}%'
+           OR lost_location LIKE '%{safe}%'
+        """
+    lost_sql += " ORDER BY lost_time DESC;"
+
+    # --- Reports（不過濾關鍵字）---
+    report_sql = """
+        SELECT
+            R.report_id,
+            R.description     AS report_description,
+            R.status          AS report_status,
+            R.created_at      AS report_time,
+            F.found_id,
+            F.item_name       AS title,
+            F.category,
+            F.found_location  AS location,
+            DATE_FORMAT(F.found_time, '%Y-%m-%d %H:%i:%s') AS date,
+            F.remark          AS description
+        FROM Reports R
+        JOIN FoundItems F ON R.target_id = F.found_id
+        ORDER BY R.created_at DESC;
     """
 
-    if keyword:
-        where_clause = "WHERE item_name LIKE %s OR remark LIKE %s OR {location_col} LIKE %s"
-        params = (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%')
-    else:
-        where_clause = ""
-        params = ()
-
-    # 組合查詢
-    found_query = base_query.format(
-        id_col='found_id',
-        location_col='found_location',
-        time_col='found_time',
-        table='FoundItems',
-        where_clause=where_clause.format(location_col='found_location')
-    )
-    lost_query = base_query.format(
-        id_col='lost_id',
-        location_col='lost_location',
-        time_col='lost_time',
-        table='LostItems',
-        where_clause=where_clause.format(location_col='lost_location')
-    )
     try:
-        # 查詢 FoundItems
-        conn1 = connection_pool.get_connection()
-        cursor1 = conn1.cursor(dictionary=True)
-        cursor1.execute(found_query, params)
-        found = cursor1.fetchall()
+        # FoundItems
+        conn = connection_pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute(found_sql)
+        found = cur.fetchall()
+        cur.close()
+        conn.close()
 
-        # 查詢 LostItems
-        conn2 = connection_pool.get_connection()
-        cursor2 = conn2.cursor(dictionary=True)
-        cursor2.execute(lost_query, params)
-        lost = cursor2.fetchall()
-        report = []
-        conn3 = connection_pool.get_connection()
-        cursor3 = conn3.cursor(dictionary=True)
-        cursor3.execute("""SELECT 
-                R.report_id,
-                R.description AS report_description,
-                R.status AS report_status,
-                R.created_at AS report_time,
-                F.found_id,
-                F.found_location AS location,
-                DATE_FORMAT(F.found_time, '%Y-%m-%d %H:%i:%s') AS date,
-                F.item_name AS title,
-                F.category,
-                F.remark AS description
-            FROM Reports R
-            JOIN FoundItems F ON R.target_id = F.found_id
-            ORDER BY R.created_at DESC;""")
-        report = cursor3.fetchall()
-        
+        # LostItems
+        conn = connection_pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute(lost_sql)
+        lost = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        # Reports
+        conn = connection_pool.get_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute(report_sql)
+        report = cur.fetchall()
     except Exception as e:
-        print("讀取 FoundItems/LostItems 錯誤：", e)
+        print("讀取管理資料錯誤：", e)
         found = []
         lost = []
         report = []
     finally:
-        if 'cursor1' in locals(): cursor1.close()
-        if 'conn1' in locals(): conn1.close()
-        if 'cursor2' in locals(): cursor2.close()
-        if 'conn2' in locals(): conn2.close()
-        if 'cursor3' in locals(): cursor3.close()
-        if 'conn3' in locals(): conn3.close()
+        cur.close()
+        conn.close()
 
-    print(report)
-    return render_template('manager.html', mode='admin', found=found, lost=lost, report=report)
+    return render_template('manager.html',
+                           mode=mode,
+                           found=found,
+                           lost=lost,
+                           report=report)
 
 @admin_bp.route('/adminDelete', methods=['GET', 'POST'])
 @admin_required

@@ -10,53 +10,45 @@ post_bp = Blueprint('post', __name__)
 def browse_page():
     mode = request.args.get('mode', 'guest')
     keyword = request.args.get('q', '').strip()
-    
+
+    # SQL 主體：直接使用 MySQL 的 DATE_FORMAT
+    sql = """
+        SELECT
+            found_id AS id,
+            item_name AS title,
+            category,
+            found_location AS location,
+            DATE_FORMAT(found_time, '%Y-%m-%d %H:%i:%s') AS date,
+            remark AS description
+        FROM FoundItems
+    """
+
+    # 如果有關鍵字，就把 LIKE 子句串進去（並簡單把單引號轉成 ''）
+    if keyword:
+        safe_kw = keyword.replace("'", "''")
+        like = f"'%{safe_kw}%'"
+        sql += f"""
+        WHERE item_name      LIKE {like}
+           OR remark         LIKE {like}
+           OR found_location LIKE {like}
+        """
+
+    sql += " ORDER BY found_time DESC;"
+
     try:
         conn = connection_pool.get_connection()
         cursor = conn.cursor(dictionary=True)
-
-
-        print(keyword)
-        if keyword:
-            query = """
-                SELECT 
-                    found_id AS id,
-                    item_name AS title,
-                    category,
-                    found_location AS location,
-                    DATE_FORMAT(found_time, '%%Y-%%m-%%d %%H:%%i:%%s') AS date,
-                    remark AS description
-                FROM FoundItems
-                WHERE item_name LIKE %s OR remark LIKE %s OR found_location LIKE %s
-                ORDER BY found_time DESC
-            """
-            params = (f'%{keyword}%', f'%{keyword}%', f'%{keyword}%')
-            print(params)
-        else:
-            query = """
-                SELECT 
-                    found_id AS id,
-                    item_name AS title,
-                    category,
-                    found_location AS location,
-                    DATE_FORMAT(found_time, '%Y-%m-%d %H:%i:%s') AS date,
-                    remark AS description
-                FROM FoundItems
-                ORDER BY found_time DESC
-            """
-            params = ()
-
-        cursor.execute(query, params)
+        cursor.execute(sql)
         items = cursor.fetchall()
-
     except Exception as e:
         print("讀取 FoundItems 錯誤：", e)
         items = []
     finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'conn' in locals(): conn.close()
-   
+        cursor.close()
+        conn.close()
+
     return render_template('browse.html', mode=mode, items=items)
+
 @post_bp.route('/reportitems')
 def report_post():
     fid = request.args.get('fid')
