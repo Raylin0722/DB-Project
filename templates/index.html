@@ -126,7 +126,7 @@
             <!-- 登入後顯示使用者資訊 -->
             <div v-if="loggedIn" class="card shadow text-center">
                 <div class="card-body">
-                    <h3 class="card-title">歡迎，{% raw %}{{ userInfo.username }}{% endraw %}！</h3>
+                    <h3 class="card-title">歡迎，<span class="text-primary">{% raw %}{{ userInfo.username }}{% endraw %}</span>  !</h3>
                     <button class="btn btn-outline-danger mt-3 me-2" @click="logout">登出</button>
                     <button class="btn btn-outline-success mt-3" @click="goToBrowse">瀏覽失物招領</button>
                     <!-- 只有 admin 才顯示管理按鈕 -->

@@ -5,6 +5,7 @@ from db import connection_pool
 from datetime import datetime, timedelta
 from flask import redirect
 from collections import defaultdict
+import difflib
 
 lostfound_bp = Blueprint('lostfound', __name__)
 
@@ -115,14 +116,28 @@ def match_items(lost_item, found_item):
     
     if not lost_item or not found_item:
         return False
+    
+    # 比對時間範圍（12 小時）
+    time_diff = abs((lost_item['lost_time'] - found_item['found_time']).total_seconds())
+    if time_diff > 3600 * 12:
+        return False
 
+    # 比對地點與校區
+    if (lost_item['lost_campus'].lower() != found_item['found_campus'].lower() or
+        lost_item['lost_location'].lower() != found_item['found_location'].lower()):
+        return False
+    
+    # 拾獲與遺失者同一個
+    if lost_item['user_id'] == found_item['user_id']:
+        return False
+
+    def fuzzy_match(a, b, threshold=0.6):
+        return difflib.SequenceMatcher(None, a, b).ratio() >= threshold
+    
     # Compare item_name, category, campus, location, and time
-    if (lost_item['item_name'].lower() == found_item['item_name'].lower() and
-        lost_item['category'].lower() == found_item['category'].lower() and
-        lost_item['lost_campus'].lower() == found_item['found_campus'].lower() and
-        lost_item['lost_location'].lower() == found_item['found_location'].lower() and
-        abs((lost_item['lost_time'] - found_item['found_time']).total_seconds()) <= 3600*12):  # within 1 hour
-        return True
+    if (lost_item['category'].lower() == found_item['category'].lower()):
+        
+        return fuzzy_match(lost_item['item_name'], found_item['item_name'], threshold=0.2)
 
     return False
 
@@ -136,7 +151,7 @@ def match_after_insert(item_type, item_id):
         cursor.execute("SELECT * FROM FoundItems WHERE found_id = %s", (item_id,))
         found = cursor.fetchone()
         # 查所有 lost
-        cursor.execute("SELECT * FROM LostItems")
+        cursor.execute("SELECT * FROM LostItems WHERE status = 'open'")
         lost_list = cursor.fetchall()
         # 配對
         for lost in lost_list:
@@ -146,7 +161,7 @@ def match_after_insert(item_type, item_id):
     elif item_type == 'lost':
         cursor.execute("SELECT * FROM LostItems WHERE lost_id = %s", (item_id,))
         lost = cursor.fetchone()
-        cursor.execute("SELECT * FROM FoundItems")
+        cursor.execute("SELECT * FROM FoundItems WHERE status = 'open'")
         found_list = cursor.fetchall()
         for found in found_list:
             if match_items(lost, found):
