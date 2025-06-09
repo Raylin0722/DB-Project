@@ -136,9 +136,11 @@
           class="btn btn-outline-primary align-middle px-4 py-2">
           返回
         </a>
+        {% if role == 'member' or role == 'admin' %}
         <button type="button" class="btn btn-danger align-middle px-4 py-2" onclick="openRejectModal({{ item.found_id }})">
           檢舉
         </button>
+        {% endif %}
         <hr>
       </div>
     </div>
