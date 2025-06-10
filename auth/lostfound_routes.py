@@ -155,8 +155,8 @@ def match_after_insert():
                     WHERE L.lost_id = %s AND NOT EXISTS (
                                 SELECT 1 FROM Matches WHERE lost_id = %s AND found_id = %s
                             );""", (lost_id, lost_id, found_id))
-                save = cursor.fetchone()
-                if len(save) != 0:
+                save = cursor.fetchone() 
+                if  save is not None:
                     result = True
                     
     
