@@ -121,6 +121,13 @@ def match_after_insert():
     conn = connection_pool.get_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        cursor.execute("""UPDATE Matches SET status = 'reject' where status = 'open';""")
+        conn.commit()
+    except Exception as e:
+        print("更新失敗：", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
+    try:
         cursor.execute("SELECT * FROM FoundItems WHERE status = 'open'")
         found_list = cursor.fetchall()
         # 查所有 lost
@@ -200,9 +207,9 @@ def send_match_email(result):
     msg = Message('師大校園失物招領系統 配對成功通知', recipients=[email])
     msg.body = f'''您好 {username}:
 
-    您登記的物品已有初步配對結果，請盡快上系統網頁確認配對項目是否正確。
+    您登記的物品已有初步配對結果，請於24小時內至系統網頁確認配對項目是否正確。
 
-    若配對正確，請依系統指示完成後續領取流程。
+    若配對正確，請依系統指示於完成後續領取流程。
 
     如有疑問，請聯繫系統管理員或客服信箱。
 
