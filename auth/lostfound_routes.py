@@ -146,12 +146,20 @@ def match_after_insert():
     
     if match_result:
         for lost_id, found_ids in match_result.items():
-            cursor.execute("""SELECT U.username, U.school_email
-            FROM LostItems L
-            JOIN Users U ON L.user_id = U.user_id
-            WHERE L.lost_id = %s;""", (lost_id,))
-            result = cursor.fetchone()
+            result = False
+            save = None
             for found_id in found_ids:
+                cursor.execute("""SELECT U.username, U.school_email
+                    FROM LostItems L
+                    JOIN Users U ON L.user_id = U.user_id
+                    WHERE L.lost_id = %s AND NOT EXISTS (
+                                SELECT 1 FROM Matches WHERE lost_id = %s AND found_id = %s
+                            );""", (lost_id, lost_id, found_id))
+                save = cursor.fetchone()
+                if len(save) != 0:
+                    result = True
+                    
+    
                 cursor.execute(
                     '''INSERT INTO Matches (lost_id, found_id, match_time, status)
                     SELECT %s, %s, NOW(), 'open'
@@ -160,9 +168,9 @@ def match_after_insert():
                         SELECT 1 FROM Matches WHERE lost_id = %s AND found_id = %s
                     );''', (lost_id, found_id, lost_id, found_id)
                 )
-            conn.commit()
+                conn.commit()
             if result:
-                send_match_email(result)
+                send_match_email(save)
 
     if 'cursor' in locals(): cursor.close()
     if 'conn' in locals(): conn.close()
