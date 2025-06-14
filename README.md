@@ -1,6 +1,7 @@
 # DB-Project
 Database project
 # env setting
+```
 ### Cloudinary 圖片上傳服務
 CLOUDINARY_API_KEY
 CLOUDINARY_API_SECRET
@@ -27,3 +28,4 @@ SECRET_KEY
 ### 系統伺服器設定
 SERVER_IP
 SERVER_PORT
+```
