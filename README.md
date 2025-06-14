@@ -1,31 +1,36 @@
 # DB-Project
 Database project
 # env setting
-```
+
 ### Cloudinary 圖片上傳服務
+```
 CLOUDINARY_API_KEY
 CLOUDINARY_API_SECRET
 CLOUDINARY_CLOUD_NAME
-
-### 郵件伺服器設定（用於帳號驗證、忘記密碼等）
+```
+### 郵件伺服器設定
+```
 MAIL_DEFAULT_SENDER
 MAIL_PASSWORD
 MAIL_PORT=587
 MAIL_SERVER=smtp.gmail.com
 MAIL_USE_TLS=True
 MAIL_USERNAME
-
+```
 ### MySQL 資料庫設定
+```
 MYSQL_DATABASE
 MYSQLHOST
 MYSQLPASSWORD
 MYSQLPORT
 MYSQLUSER
-
+```
 ### Flask 或後端框架的安全設定
+```
 SECRET_KEY
-
+```
 ### 系統伺服器設定
+```
 SERVER_IP
 SERVER_PORT
 ```
